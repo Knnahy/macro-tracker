@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#18181b">
+  <meta name="description" content="Personal offline-first macro and nutrition tracker">
+  <title>NutriLog Offline</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-row">
+      <h1 class="app-title">NutriLog</h1>
+      <div id="storage-badge" class="badge" title="IndexedDB Persistence Status">Storage: checking</div>
+    </div>
+    <div id="backup-banner" class="banner banner-warn hidden" role="status">
+      <span id="backup-banner-text">Backup overdue. Export your database in Foods tab.</span>
+      <button type="button" id="backup-now-btn" class="btn btn-sm">Export JSON</button>
+    </div>
+    <div id="status-banner" class="banner hidden" role="alert">
+      <span id="status-banner-text"></span>
+      <button type="button" id="status-banner-close" class="btn-icon" aria-label="Dismiss message">×</button>
+    </div>
+  </header>
+
+  <main id="app-main" class="app-main">
+    <!-- TAB 1: TODAY -->
+    <section id="tab-today" class="tab-panel active" aria-label="Today">
+      <div class="date-nav card">
+        <button type="button" id="date-prev-btn" class="btn btn-icon" aria-label="Previous day">‹</button>
+        <input type="date" id="today-date-input" class="input-date" aria-label="Selected date">
+        <button type="button" id="date-today-btn" class="btn btn-sm">Today</button>
+        <button type="button" id="date-next-btn" class="btn btn-icon" aria-label="Next day">›</button>
+      </div>
+
+      <div id="today-targets-summary" class="card"></div>
+
+      <details class="card accordion">
+        <summary class="accordion-summary">Macro &amp; Nutrient Reference Guide</summary>
+        <div class="accordion-body">
+          <p class="disclaimer-note">General nutritional information only; not medical diagnosis or treatment advice.</p>
+          <div class="edu-block">
+            <h4>Protein (4 kcal/g)</h4>
+            <p>Provides structural nitrogen and amino acids for tissue repair, enzymes, hormones, and immune synthesis. Dietary protein supplies nine essential amino acids that the human body cannot synthesize endogenously:</p>
+            <ul class="eaa-list">
+              <li><strong>Histidine:</strong> Precursor to histamine; supports myelin maintenance and immune signaling.</li>
+              <li><strong>Isoleucine:</strong> Branched-chain amino acid involved in muscle metabolism and hemoglobin synthesis.</li>
+              <li><strong>Leucine:</strong> Primary trigger for skeletal muscle protein synthesis via mTOR signaling.</li>
+              <li><strong>Lysine:</strong> Required for collagen cross-linking, calcium absorption, and carnitine production.</li>
+              <li><strong>Methionine:</strong> Sulfur donor essential for methylation pathways, glutathione, and tissue growth.</li>
+              <li><strong>Phenylalanine:</strong> Precursor for tyrosine and catecholamine neurotransmitters (dopamine, norepinephrine).</li>
+              <li><strong>Threonine:</strong> Principal structural component of mucin glycoproteins in gut barrier and enamel.</li>
+              <li><strong>Tryptophan:</strong> Precursor for serotonin, melatonin, and endogenous niacin synthesis.</li>
+              <li><strong>Valine:</strong> Branched-chain amino acid supporting nitrogen balance and muscular energy supply.</li>
+            </ul>
+          </div>
+          <div class="edu-block">
+            <h4>Carbohydrates (4 kcal/g)</h4>
+            <p>Primary substrate for high-intensity muscular work and central nervous system ATP production. Stored as hepatic and muscular glycogen to regulate blood glucose and spare dietary protein from gluconeogenesis.</p>
+          </div>
+          <div class="edu-block">
+            <h4>Fat (9 kcal/g)</h4>
+            <p>Dense energy reserve, structural component of phospholipid cell membranes, and vehicle for fat-soluble vitamins (A, D, E, K). Supplies essential fatty acids required for eicosanoid and steroid hormone synthesis.</p>
+          </div>
+          <div class="edu-block">
+            <h4>Dietary Fiber (~0–2 kcal/g)</h4>
+            <p>Non-digestible plant polysaccharides and lignin. Soluble fractions modulate gastric emptying and glycemic response; insoluble fractions increase fecal bulk and support colonic transit and short-chain fatty acid fermentation.</p>
+          </div>
+          <div class="edu-block">
+            <h4>Alcohol / Ethanol (7 kcal/g)</h4>
+            <p>Non-essential energy substrate prioritized for hepatic oxidation via alcohol dehydrogenase. Temporarily suppresses lipid oxidation and provides energy without contributing structural macronutrients or micronutrients.</p>
+          </div>
+        </div>
+      </details>
+
+      <div class="card">
+        <h2 class="section-title">Log Food or Dish</h2>
+        <form id="log-entry-form" class="form-grid">
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Meal</span>
+              <select id="log-meal" required>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Snack">Snack</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Type</span>
+              <select id="log-ref-type" required>
+                <option value="food">Food / Drink</option>
+                <option value="dish">Saved Dish</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span>Select Item</span>
+            <select id="log-ref-id" required></select>
+          </label>
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Amount (g / ml)</span>
+              <input type="number" id="log-grams" min="0.1" step="0.1" value="100" required>
+            </label>
+            <div class="field field-end">
+              <button type="submit" class="btn btn-primary btn-block">Add to Log</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <h2 class="section-title">Water &amp; Hydration</h2>
+          <span id="water-progress-label" class="mono-text">0 / 0 ml</span>
+        </div>
+        <div class="progress-track">
+          <div id="water-progress-bar" class="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="quick-btns">
+          <button type="button" class="btn btn-sm water-quick-btn" data-ml="150">+150 ml</button>
+          <button type="button" class="btn btn-sm water-quick-btn" data-ml="250">+250 ml</button>
+          <button type="button" class="btn btn-sm water-quick-btn" data-ml="500">+500 ml</button>
+        </div>
+        <form id="water-custom-form" class="form-grid mt-sm">
+          <div class="field-row three-col">
+            <label class="field">
+              <span>Volume (ml)</span>
+              <input type="number" id="water-custom-ml" min="1" step="1" placeholder="330" required>
+            </label>
+            <label class="field">
+              <span>Type</span>
+              <select id="water-custom-type">
+                <option value="water">Plain Water</option>
+                <option value="other">Caloric / Other Drink</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Label / Drink</span>
+              <input type="text" id="water-custom-label" placeholder="Sparkling / Tea" maxlength="60">
+            </label>
+          </div>
+          <div id="water-drink-food-row" class="field-row hidden">
+            <label class="field">
+              <span>Link to Drink in Foods DB (counts macros in Today log)</span>
+              <select id="water-drink-food-id">
+                <option value="">— No calories / unlinked —</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-sm">Log Fluid</button>
+        </form>
+        <div id="water-log-list" class="item-list mt-sm"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Meals Logged</h2>
+        <div id="today-log-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: FOODS -->
+    <section id="tab-foods" class="tab-panel" aria-label="Foods">
+      <div class="banner banner-info">
+        <span>Seed items are marked <strong>seed-approx</strong>. Always verify nutrition values against your own package labels.</span>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <h2 id="food-form-title" class="section-title">Fast Add / Edit Food</h2>
+          <button type="button" id="food-form-reset-btn" class="btn btn-sm hidden">Cancel Edit</button>
+        </div>
+        <form id="food-form" class="form-grid">
+          <input type="hidden" id="food-id">
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Name *</span>
+              <input type="text" id="food-name" required maxlength="80" placeholder="e.g. Rolled Oats">
+            </label>
+            <label class="field">
+              <span>Brand</span>
+              <input type="text" id="food-brand" maxlength="60" placeholder="Generic">
+            </label>
+          </div>
+          <div class="field-row three-col">
+            <label class="field">
+              <span>Market</span>
+              <input type="text" id="food-market" maxlength="50" placeholder="Local / Supermarket">
+            </label>
+            <label class="field">
+              <span>Category</span>
+              <input type="text" id="food-category" maxlength="50" placeholder="Grains / Dairy">
+            </label>
+            <label class="field">
+              <span>Type</span>
+              <select id="food-is-drink">
+                <option value="0">Solid Food</option>
+                <option value="1">Drink / Liquid</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row four-col">
+            <label class="field">
+              <span>kcal / 100g *</span>
+              <input type="number" id="food-kcal" min="0" step="0.1" required>
+            </label>
+            <label class="field">
+              <span>Protein (g) *</span>
+              <input type="number" id="food-protein" min="0" step="0.1" required>
+            </label>
+            <label class="field">
+              <span>Carbs (g) *</span>
+              <input type="number" id="food-carbs" min="0" step="0.1" required>
+            </label>
+            <label class="field">
+              <span>Fat (g) *</span>
+              <input type="number" id="food-fat" min="0" step="0.1" required>
+            </label>
+          </div>
+          <div class="field-row four-col">
+            <label class="field">
+              <span>Sugars (g)</span>
+              <input type="number" id="food-sugars" min="0" step="0.1" value="0">
+            </label>
+            <label class="field">
+              <span>Fiber (g)</span>
+              <input type="number" id="food-fiber" min="0" step="0.1" value="0">
+            </label>
+            <label class="field">
+              <span>Sat Fat (g)</span>
+              <input type="number" id="food-satfat" min="0" step="0.1" value="0">
+            </label>
+            <label class="field">
+              <span>Sodium (mg)</span>
+              <input type="number" id="food-sodium" min="0" step="1" value="0">
+            </label>
+          </div>
+          <div class="field-row three-col">
+            <label class="field">
+              <span>Serving (g/ml)</span>
+              <input type="number" id="food-serving" min="1" step="1" value="100" required>
+            </label>
+            <label class="field">
+              <span>Price / kg (optional)</span>
+              <input type="number" id="food-price" min="0" step="0.01" placeholder="0.00">
+            </label>
+            <label class="field">
+              <span>Source</span>
+              <input type="text" id="food-source" maxlength="40" value="user-label">
+            </label>
+          </div>
+          <div id="food-atwater-warning" class="banner banner-warn hidden"></div>
+          <button type="submit" id="food-submit-btn" class="btn btn-primary">Save Food</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Search &amp; Filter Foods</h2>
+        <div class="form-grid">
+          <input type="search" id="food-search" placeholder="Search name or brand...">
+          <div class="field-row three-col">
+            <select id="food-filter-market">
+              <option value="">All Markets</option>
+            </select>
+            <select id="food-filter-category">
+              <option value="">All Categories</option>
+            </select>
+            <select id="food-filter-drink">
+              <option value="">Foods &amp; Drinks</option>
+              <option value="0">Foods Only</option>
+              <option value="1">Drinks Only</option>
+            </select>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="food-show-archived">
+            <span>Show archived foods</span>
+          </label>
+        </div>
+        <div id="foods-list" class="item-list mt-sm"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Backup &amp; Data Import / Export</h2>
+        <p id="last-backup-label" class="meta-text">Last full JSON backup: Never</p>
+        <div class="button-row">
+          <button type="button" id="export-json-btn" class="btn">Export Full DB (JSON)</button>
+          <label class="btn file-btn">
+            <span>Import JSON</span>
+            <input type="file" id="import-json-input" accept=".json,application/json" hidden>
+          </label>
+          <label class="btn file-btn">
+            <span>Import Foods CSV</span>
+            <input type="file" id="import-csv-input" accept=".csv,text/csv" hidden>
+          </label>
+        </div>
+        <p class="meta-text mt-xs">CSV headers: <code>name,brand,market,category,isDrink,kcal,protein,carbs,sugars,fiber,fat,satFat,sodiumMg,defaultServingG,pricePerKg,source</code></p>
+      </div>
+    </section>
+
+    <!-- TAB 3: DISHES -->
+    <section id="tab-dishes" class="tab-panel" aria-label="Dishes">
+      <div class="card">
+        <div class="section-header">
+          <h2 id="dish-form-title" class="section-title">Build / Edit Dish</h2>
+          <button type="button" id="dish-form-reset-btn" class="btn btn-sm hidden">Cancel Edit</button>
+        </div>
+        <form id="dish-form" class="form-grid">
+          <input type="hidden" id="dish-id">
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Dish Name *</span>
+              <input type="text" id="dish-name" required maxlength="80" placeholder="e.g. Overnight Oats Bowl">
+            </label>
+            <label class="field">
+              <span>Servings Count (preview)</span>
+              <input type="number" id="dish-servings" min="1" step="0.5" value="1">
+            </label>
+          </div>
+          <label class="field">
+            <span>Notes</span>
+            <input type="text" id="dish-notes" maxlength="140" placeholder="Prep instructions or portion notes">
+          </label>
+
+          <div class="dish-builder-add">
+            <label class="field">
+              <span>Ingredient</span>
+              <select id="dish-ingredient-food"></select>
+            </label>
+            <label class="field">
+              <span>Grams</span>
+              <input type="number" id="dish-ingredient-grams" min="0.1" step="0.1" value="100">
+            </label>
+            <button type="button" id="dish-add-ingredient-btn" class="btn btn-sm">+ Add Item</button>
+          </div>
+
+          <div id="dish-Draft-items" class="item-list"></div>
+          <div id="dish-live-summary" class="dish-summary-box"></div>
+          <button type="submit" class="btn btn-primary">Save Dish</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Saved Dishes</h2>
+        <div id="dishes-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: STREAKS -->
+    <section id="tab-streaks" class="tab-panel" aria-label="Streaks">
+      <div class="card">
+        <h2 class="section-title">Consistency Streaks</h2>
+        <p class="meta-text">Computed dynamically from logs. Configured rest days pause streak breaks.</p>
+        <div id="streaks-summary-cards" class="streak-cards"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Last 28 Days</h2>
+        <div class="legend-row">
+          <span><i class="dot dot-log"></i>Log (2+)</span>
+          <span><i class="dot dot-target"></i>Target (±10% kcal, ≥90% P)</span>
+          <span><i class="dot dot-water"></i>Water (≥100%)</span>
+          <span><i class="dot dot-rest"></i>Rest Day</span>
+        </div>
+        <div id="streaks-calendar-grid" class="calendar-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PROFILE -->
+    <section id="tab-profile" class="tab-panel" aria-label="Profile">
+      <div class="card">
+        <h2 class="section-title">Biometrics &amp; Goal Settings</h2>
+        <form id="profile-form" class="form-grid">
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Sex *</span>
+              <select id="prof-sex" required>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Age (years) *</span>
+              <input type="number" id="prof-age" min="15" max="110" step="1" required>
+            </label>
+          </div>
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Height (cm) *</span>
+              <input type="number" id="prof-height" min="100" max="250" step="0.5" required>
+            </label>
+            <label class="field">
+              <span>Weight (kg) *</span>
+              <input type="number" id="prof-weight" min="30" max="300" step="0.1" required>
+            </label>
+          </div>
+          <label class="field">
+            <span>Activity Level *</span>
+            <select id="prof-activity" required>
+              <option value="1.2">Sedentary (1.2× — desk job, minimal planned exercise)</option>
+              <option value="1.375">Lightly Active (1.375× — light training 1–3 days/wk)</option>
+              <option value="1.55">Moderately Active (1.55× — moderate training 3–5 days/wk)</option>
+              <option value="1.725">Very Active (1.725× — hard training 6–7 days/wk)</option>
+              <option value="1.9">Extra Active (1.9× — physical labor or 2× daily training)</option>
+            </select>
+          </label>
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Goal *</span>
+              <select id="prof-goal" required>
+                <option value="maintenance">Maintenance</option>
+                <option value="loss">Fat Loss</option>
+                <option value="gain">Lean Gain</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Rate (kg / week)</span>
+              <input type="number" id="prof-rate" min="0" max="1.5" step="0.05" value="0.25">
+            </label>
+          </div>
+          <div class="field-row three-col">
+            <label class="field">
+              <span>Protein (g/kg)</span>
+              <input type="number" id="prof-protein-gkg" min="1.2" max="2.2" step="0.1" value="1.6" required>
+            </label>
+            <label class="field">
+              <span>Fat (% of kcal)</span>
+              <input type="number" id="prof-fat-pct" min="15" max="50" step="1" value="25" required>
+            </label>
+            <label class="field">
+              <span>Water (ml/kg)</span>
+              <input type="number" id="prof-water-mlkg" min="20" max="70" step="1" value="35" required>
+            </label>
+          </div>
+          <div class="field-row two-col">
+            <label class="field">
+              <span>Currency Symbol</span>
+              <input type="text" id="prof-currency" maxlength="5" value="€">
+            </label>
+            <label class="field">
+              <span>Rest Days (0=Sun..6=Sat or YYYY-MM-DD)</span>
+              <input type="text" id="prof-restdays" placeholder="e.g. 0, 6, 2026-12-25">
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Profile</button>
+        </form>
+      </div>
+
+      <div id="profile-calculated-card" class="card"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Primary Navigation">
+    <button type="button" class="nav-tab active" data-tab="today">Today</button>
+    <button type="button" class="nav-tab" data-tab="foods">Foods</button>
+    <button type="button" class="nav-tab" data-tab="dishes">Dishes</button>
+    <button type="button" class="nav-tab" data-tab="streaks">Streaks</button>
+    <button type="button" class="nav-tab" data-tab="profile">Profile</button>
+  </nav>
+
+  <script src="./vendor/dexie.min.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
