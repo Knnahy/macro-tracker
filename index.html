@@ -2,19 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#18181b">
   <meta name="description" content="Personal offline-first macro and nutrition tracker">
   <title>NutriLog Offline</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" href="./icons/icon-192.png" type="image/png">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header class="app-header">
     <div class="header-row">
       <h1 class="app-title">NutriLog</h1>
-      <div id="storage-badge" class="badge" title="IndexedDB Persistence Status">Storage: checking</div>
+      <div class="header-right">
+        <span id="account-badge" class="badge hidden"></span>
+        <div id="storage-badge" class="badge" title="IndexedDB Persistence Status">Storage: Local</div>
+        <button type="button" id="header-lock-btn" class="btn btn-sm hidden">Lock</button>
+      </div>
     </div>
     <div id="backup-banner" class="banner banner-warn hidden" role="status">
       <span id="backup-banner-text">Backup overdue. Export your database in Foods tab.</span>
@@ -26,7 +32,146 @@
     </div>
   </header>
 
-  <main id="app-main" class="app-main">
+  <!-- AUTHENTICATION VIEW (SHOWN WHILE LOCKED / SIGNED OUT) -->
+  <section id="auth-view" class="auth-container" aria-label="Account Access">
+    <div id="legacy-migration-notice" class="banner banner-info hidden" role="status">
+      <div>
+        <strong>Existing data found on this device.</strong> It will be moved into the account you create.
+      </div>
+      <button type="button" id="legacy-backup-btn" class="btn btn-sm">Download v0.1 Backup</button>
+    </div>
+
+    <div id="auth-error-box" class="banner banner-err hidden" role="alert" aria-live="assertive"></div>
+
+    <!-- PANEL 1: SIGN IN -->
+    <div id="auth-signin-panel" class="card">
+      <h2 class="section-title">Sign In</h2>
+      <form id="signin-form" class="form-grid">
+        <label class="field">
+          <span>Login (username or email)</span>
+          <input type="text" id="signin-login" autocomplete="username" required maxlength="80">
+        </label>
+        <div class="field">
+          <label for="signin-password">Password</label>
+          <div class="password-row">
+            <input type="password" id="signin-password" autocomplete="current-password" required>
+            <button type="button" class="btn btn-sm" data-toggle-password="signin-password">Show</button>
+          </div>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="signin-keep">
+          <span>Keep me signed in on this device (30 days)</span>
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+      <div class="auth-links mt-sm">
+        <button type="button" id="goto-signup-btn" class="btn btn-sm">Create Account</button>
+        <button type="button" id="goto-reset-btn" class="btn btn-sm">Reset with Recovery Code</button>
+      </div>
+    </div>
+
+    <!-- PANEL 2: CREATE ACCOUNT -->
+    <div id="auth-signup-panel" class="card hidden">
+      <h2 class="section-title">Create Local Account</h2>
+      <form id="signup-form" class="form-grid">
+        <label class="field">
+          <span>Login (username or email) *</span>
+          <input type="text" id="signup-login" autocomplete="username" required maxlength="80">
+        </label>
+        <label class="field">
+          <span>Display Name *</span>
+          <input type="text" id="signup-display-name" autocomplete="name" required maxlength="60">
+        </label>
+        <div class="field">
+          <label for="signup-password">Password (min 10 characters) *</label>
+          <div class="password-row">
+            <input type="password" id="signup-password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="btn btn-sm" data-toggle-password="signup-password">Show</button>
+          </div>
+          <span id="signup-password-hint" class="meta-text">Minimum 10 characters.</span>
+        </div>
+        <div class="field">
+          <label for="signup-confirm-password">Confirm Password *</label>
+          <div class="password-row">
+            <input type="password" id="signup-confirm-password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="btn btn-sm" data-toggle-password="signup-confirm-password">Show</button>
+          </div>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="signup-accept-legal" required>
+          <span>I accept the <a href="./legal/terms.html">Terms</a>, <a href="./legal/privacy.html">Privacy Policy</a>, and <a href="./legal/health-disclaimer.html">Health Disclaimer</a>.</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="signup-confirm-age" required>
+          <span>I am 18 or older.</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="signup-keep">
+          <span>Keep me signed in on this device (30 days)</span>
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+      </form>
+      <div class="auth-links mt-sm">
+        <button type="button" id="goto-signin-from-signup-btn" class="btn btn-sm">Back to Sign In</button>
+      </div>
+    </div>
+
+    <!-- PANEL 3: ONE-TIME RECOVERY CODE DISPLAY -->
+    <div id="auth-recovery-panel" class="card hidden">
+      <h2 class="section-title">Save Your Recovery Code</h2>
+      <p class="meta-text">This recovery code is shown <strong>only once</strong>. Without your password or this recovery code, your account data cannot be recovered.</p>
+      <div id="recovery-code-display" class="recovery-box mono-text" aria-live="polite"></div>
+      <div class="button-row mt-sm">
+        <button type="button" id="recovery-copy-btn" class="btn btn-sm">Copy Code</button>
+        <button type="button" id="recovery-download-btn" class="btn btn-sm">Download .txt</button>
+      </div>
+      <label class="checkbox-label mt-sm">
+        <input type="checkbox" id="recovery-saved-checkbox">
+        <span>I saved this recovery code in a safe place.</span>
+      </label>
+      <button type="button" id="recovery-continue-btn" class="btn btn-primary btn-block mt-sm" disabled>Continue</button>
+    </div>
+
+    <!-- PANEL 4: RESET PASSWORD WITH RECOVERY CODE -->
+    <div id="auth-reset-panel" class="card hidden">
+      <h2 class="section-title">Reset Password</h2>
+      <p class="meta-text">Using your recovery code issues a brand-new recovery code and invalidates the old one. Without your password or recovery code, data cannot be recovered.</p>
+      <form id="reset-form" class="form-grid mt-sm">
+        <label class="field">
+          <span>Login *</span>
+          <input type="text" id="reset-login" autocomplete="username" required maxlength="80">
+        </label>
+        <label class="field">
+          <span>Recovery Code *</span>
+          <input type="text" id="reset-recovery-code" autocomplete="off" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" required>
+        </label>
+        <div class="field">
+          <label for="reset-new-password">New Password (min 10 characters) *</label>
+          <div class="password-row">
+            <input type="password" id="reset-new-password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="btn btn-sm" data-toggle-password="reset-new-password">Show</button>
+          </div>
+          <span id="reset-password-hint" class="meta-text">Minimum 10 characters.</span>
+        </div>
+        <div class="field">
+          <label for="reset-confirm-password">Confirm New Password *</label>
+          <div class="password-row">
+            <input type="password" id="reset-confirm-password" autocomplete="new-password" minlength="10" required>
+            <button type="button" class="btn btn-sm" data-toggle-password="reset-confirm-password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+      </form>
+      <div class="auth-links mt-sm">
+        <button type="button" id="goto-signin-from-reset-btn" class="btn btn-sm">Back to Sign In</button>
+      </div>
+    </div>
+
+    <p class="device-notice meta-text">Your data is stored on this device only. Local login separates accounts on a shared device.</p>
+  </section>
+
+  <!-- MAIN APPLICATION (SHOWN WHEN AUTHENTICATED) -->
+  <main id="app-main" class="app-main hidden">
     <!-- TAB 1: TODAY -->
     <section id="tab-today" class="tab-panel active" aria-label="Today">
       <div class="date-nav card">
@@ -118,10 +263,8 @@
           <h2 class="section-title">Water &amp; Hydration</h2>
           <span id="water-progress-label" class="mono-text">0 / 0 ml</span>
         </div>
-        <div class="progress-track">
-          <div id="water-progress-bar" class="progress-fill" style="width:0%"></div>
-        </div>
-        <div class="quick-btns">
+        <progress id="water-progress-bar" class="progress-native" value="0" max="100"></progress>
+        <div class="quick-btns mt-sm">
           <button type="button" class="btn btn-sm water-quick-btn" data-ml="150">+150 ml</button>
           <button type="button" class="btn btn-sm water-quick-btn" data-ml="250">+250 ml</button>
           <button type="button" class="btn btn-sm water-quick-btn" data-ml="500">+500 ml</button>
@@ -287,7 +430,7 @@
         <h2 class="section-title">Backup &amp; Data Import / Export</h2>
         <p id="last-backup-label" class="meta-text">Last full JSON backup: Never</p>
         <div class="button-row">
-          <button type="button" id="export-json-btn" class="btn">Export Full DB (JSON)</button>
+          <button type="button" id="export-json-btn" class="btn">Export Account DB (JSON)</button>
           <label class="btn file-btn">
             <span>Import JSON</span>
             <input type="file" id="import-json-input" accept=".json,application/json" hidden>
@@ -369,7 +512,7 @@
       </div>
     </section>
 
-    <!-- TAB 5: PROFILE -->
+    <!-- TAB 5: PROFILE & ACCOUNT SETTINGS -->
     <section id="tab-profile" class="tab-panel" aria-label="Profile">
       <div class="card">
         <h2 class="section-title">Biometrics &amp; Goal Settings</h2>
@@ -445,15 +588,100 @@
               <input type="text" id="prof-restdays" placeholder="e.g. 0, 6, 2026-12-25">
             </label>
           </div>
-          <button type="submit" class="btn btn-primary">Save Profile</button>
+          <button type="submit" class="btn btn-primary">Save Biometric Profile</button>
         </form>
       </div>
 
       <div id="profile-calculated-card" class="card"></div>
+
+      <!-- ACCOUNT & SECURITY SETTINGS -->
+      <div class="card">
+        <div class="section-header">
+          <h2 class="section-title">Account &amp; Security Settings</h2>
+          <span id="settings-app-version" class="badge">v0.2.0</span>
+        </div>
+        <p id="settings-account-summary" class="meta-text"></p>
+
+        <div class="form-grid mt-sm">
+          <label class="field">
+            <span>Auto-Lock After Inactivity</span>
+            <select id="settings-autolock">
+              <option value="1">1 minute</option>
+              <option value="5">5 minutes</option>
+              <option value="10" selected>10 minutes (default)</option>
+              <option value="30">30 minutes</option>
+              <option value="0">Never</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button type="button" id="settings-lock-btn" class="btn">Lock Now</button>
+            <button type="button" id="settings-signout-btn" class="btn">Sign Out</button>
+            <button type="button" id="settings-export-btn" class="btn">Export My Data (JSON)</button>
+          </div>
+        </div>
+
+        <div id="settings-legacy-cleanup-row" class="banner banner-info mt-sm hidden">
+          <span>Legacy v0.1 data has been migrated to your account.</span>
+          <button type="button" id="settings-remove-legacy-btn" class="btn btn-sm">Remove Old Data</button>
+        </div>
+
+        <hr class="divider">
+
+        <h3 class="subsection-title">Change Password</h3>
+        <form id="settings-password-form" class="form-grid">
+          <div class="field">
+            <label for="settings-current-password">Current Password</label>
+            <div class="password-row">
+              <input type="password" id="settings-current-password" autocomplete="current-password" required>
+              <button type="button" class="btn btn-sm" data-toggle-password="settings-current-password">Show</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="settings-new-password">New Password (min 10 chars)</label>
+            <div class="password-row">
+              <input type="password" id="settings-new-password" autocomplete="new-password" minlength="10" required>
+              <button type="button" class="btn btn-sm" data-toggle-password="settings-new-password">Show</button>
+            </div>
+            <span id="settings-password-hint" class="meta-text">Minimum 10 characters.</span>
+          </div>
+          <div class="field">
+            <label for="settings-confirm-password">Confirm New Password</label>
+            <div class="password-row">
+              <input type="password" id="settings-confirm-password" autocomplete="new-password" minlength="10" required>
+              <button type="button" class="btn btn-sm" data-toggle-password="settings-confirm-password">Show</button>
+            </div>
+          </div>
+          <button type="submit" class="btn">Update Password</button>
+        </form>
+
+        <hr class="divider">
+
+        <h3 class="subsection-title">Delete Account</h3>
+        <p class="meta-text">Permanently deletes this account, its sessions, and all nutrition data stored in its database.</p>
+        <form id="settings-delete-account-form" class="form-grid mt-xs">
+          <label class="field">
+            <span>Confirm Password</span>
+            <input type="password" id="delete-account-password" autocomplete="current-password" required>
+          </label>
+          <label class="field">
+            <span>Type DELETE to confirm</span>
+            <input type="text" id="delete-account-confirm-text" placeholder="DELETE" required>
+          </label>
+          <button type="submit" class="btn btn-danger">Permanently Delete Account</button>
+        </form>
+
+        <hr class="divider">
+
+        <div class="legal-links meta-text">
+          <a href="./legal/terms.html">Terms of Use</a> •
+          <a href="./legal/privacy.html">Privacy Policy</a> •
+          <a href="./legal/health-disclaimer.html">Health Disclaimer</a>
+        </div>
+      </div>
     </section>
   </main>
 
-  <nav class="bottom-nav" aria-label="Primary Navigation">
+  <nav id="bottom-nav" class="bottom-nav hidden" aria-label="Primary Navigation">
     <button type="button" class="nav-tab active" data-tab="today">Today</button>
     <button type="button" class="nav-tab" data-tab="foods">Foods</button>
     <button type="button" class="nav-tab" data-tab="dishes">Dishes</button>

@@ -1,13 +1,18 @@
+import { APP_VERSION, DEFAULT_AUTOLOCK_MIN } from './config.js';
+import { authProvider, evaluatePasswordPolicy } from './auth/localAuth.js';
 import {
-  db,
-  initDatabase,
+  openUserDb,
+  closeUserDb,
   getProfile,
   saveProfile,
+  getUserSettings,
+  saveUserSettings,
   deleteOrArchiveFood,
   saveDishWithItems,
-  deleteDish,
-  exportFullDatabaseJSON,
-  importFullDatabaseJSON
+  softDeleteDish,
+  softDeleteRecord,
+  exportUserDbJSON,
+  importUserDbJSON
 } from './db.js';
 
 import {
@@ -26,6 +31,7 @@ import {
   fmt,
   showBanner,
   hideBanner,
+  showAuthError,
   renderTodaySummary,
   renderTodayLogs,
   renderWaterSection,
@@ -35,13 +41,18 @@ import {
 } from './ui.js';
 
 const state = {
+  session: null,
+  userDb: null,
   selectedDate: formatLocalDate(new Date()),
   profile: null,
+  settings: null,
   targets: null,
   foods: [],
   dishes: [],
   dishItems: [],
-  draftDishItems: []
+  draftDishItems: [],
+  inactivityTimer: null,
+  pendingRecoveryDoneAction: null
 };
 
 async function safeRun(fn) {
@@ -49,9 +60,146 @@ async function safeRun(fn) {
     await fn();
   } catch (err) {
     console.error(err);
-    showBanner(err?.message || 'Database operation failed.', 'err');
+    showBanner(err?.message || 'Operation failed.', 'err');
   }
 }
+
+async function safeAuthRun(fn) {
+  showAuthError('');
+  try {
+    await fn();
+  } catch (err) {
+    console.error(err);
+    showAuthError(err?.message || 'Authentication error.');
+  }
+}
+
+// ---------------- AUTO-LOCK INACTIVITY TIMER ----------------
+
+function resetInactivityTimer() {
+  if (state.inactivityTimer) {
+    clearTimeout(state.inactivityTimer);
+    state.inactivityTimer = null;
+  }
+  if (!state.session) return;
+  const minutes = Number(state.settings?.autoLockMinutes ?? DEFAULT_AUTOLOCK_MIN);
+  if (!minutes || minutes <= 0) return;
+
+  state.inactivityTimer = setTimeout(() => {
+    authProvider.signOut('autolock').catch(console.error);
+  }, minutes * 60 * 1000);
+}
+
+function bindActivityListeners() {
+  const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+  for (const ev of events) {
+    window.addEventListener(ev, () => {
+      if (state.session) resetInactivityTimer();
+    }, { passive: true });
+  }
+}
+
+// ---------------- AUTH UI & VIEW SWITCHING ----------------
+
+function showAuthPanel(panelId) {
+  showAuthError('');
+  const panels = ['auth-signin-panel', 'auth-signup-panel', 'auth-recovery-panel', 'auth-reset-panel'];
+  for (const id of panels) {
+    document.getElementById(id)?.classList.toggle('hidden', id !== panelId);
+  }
+  const activePanel = document.getElementById(panelId);
+  const firstInput = activePanel?.querySelector('input:not([type="hidden"]):not([type="checkbox"])');
+  if (firstInput) firstInput.focus();
+}
+
+async function refreshLegacyNoticeUI() {
+  const status = await authProvider.getLegacyStatus();
+  const notice = document.getElementById('legacy-migration-notice');
+  if (notice) {
+    notice.classList.toggle('hidden', !status.hasLegacyData);
+  }
+  const cleanupRow = document.getElementById('settings-legacy-cleanup-row');
+  if (cleanupRow) {
+    cleanupRow.classList.toggle('hidden', !(status.migrated && !status.legacyDeleted));
+  }
+}
+
+async function enterAuthenticatedApp(session) {
+  state.session = session;
+  state.userDb = await openUserDb(session.accountId);
+
+  document.getElementById('auth-view')?.classList.add('hidden');
+  document.getElementById('app-main')?.classList.remove('hidden');
+  document.getElementById('bottom-nav')?.classList.remove('hidden');
+  document.getElementById('header-lock-btn')?.classList.remove('hidden');
+
+  const userBadge = document.getElementById('account-badge');
+  if (userBadge) {
+    userBadge.textContent = session.displayName || session.login;
+    userBadge.classList.remove('hidden');
+  }
+
+  await reloadCoreState();
+  await initPersistenceAndBackupCheck();
+  await refreshLegacyNoticeUI();
+  resetInactivityTimer();
+}
+
+async function enterLockedAuthView(meta = {}) {
+  if (state.inactivityTimer) {
+    clearTimeout(state.inactivityTimer);
+    state.inactivityTimer = null;
+  }
+  if (state.session?.accountId) {
+    await closeUserDb(state.session.accountId);
+  }
+  state.session = null;
+  state.userDb = null;
+  state.profile = null;
+  state.settings = null;
+  state.targets = null;
+  state.foods = [];
+  state.dishes = [];
+  state.dishItems = [];
+  state.draftDishItems = [];
+
+  document.getElementById('app-main')?.classList.add('hidden');
+  document.getElementById('bottom-nav')?.classList.add('hidden');
+  document.getElementById('header-lock-btn')?.classList.add('hidden');
+  document.getElementById('account-badge')?.classList.add('hidden');
+  document.getElementById('backup-banner')?.classList.add('hidden');
+  hideBanner();
+
+  document.getElementById('auth-view')?.classList.remove('hidden');
+  showAuthPanel('auth-signin-panel');
+
+  if (meta?.lastLogin) {
+    const loginInput = document.getElementById('signin-login');
+    if (loginInput) loginInput.value = meta.lastLogin;
+  }
+  if (meta?.reason === 'autolock') {
+    showAuthError('Session locked due to inactivity. Sign in to continue.');
+  } else if (meta?.reason === 'locked') {
+    showAuthError('Session locked.');
+  }
+
+  await refreshLegacyNoticeUI();
+}
+
+function presentRecoveryCodeModal(recoveryCode, onConfirmed) {
+  const codeEl = document.getElementById('recovery-code-display');
+  const confirmCheck = document.getElementById('recovery-saved-checkbox');
+  const continueBtn = document.getElementById('recovery-continue-btn');
+
+  if (codeEl) codeEl.textContent = recoveryCode;
+  if (confirmCheck) confirmCheck.checked = false;
+  if (continueBtn) continueBtn.disabled = true;
+
+  state.pendingRecoveryDoneAction = onConfirmed;
+  showAuthPanel('auth-recovery-panel');
+}
+
+// ---------------- PERSISTENCE & BACKUP REMINDER ----------------
 
 async function initPersistenceAndBackupCheck() {
   const badge = document.getElementById('storage-badge');
@@ -80,25 +228,33 @@ function updateBackupStatusUI() {
       ? `Last full JSON backup: ${new Date(lastBackupAt).toLocaleString()}`
       : 'Last full JSON backup: Never';
   }
-  if (banner) {
+  if (banner && state.session) {
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
     const overdue = !lastBackupAt || Date.now() - lastBackupAt > sevenDaysMs;
     banner.classList.toggle('hidden', !overdue);
   }
 }
 
+// ---------------- CORE DATA LOADING (SCOPED TO userDb) ----------------
+
 async function reloadCoreState() {
-  const [profile, foods, dishes, dishItems] = await Promise.all([
-    getProfile(),
-    db.foods.toArray(),
-    db.dishes.toArray(),
-    db.dishItems.toArray()
+  if (!state.userDb) return;
+  const userDb = state.userDb;
+
+  const [profile, settings, rawFoods, rawDishes, rawDishItems] = await Promise.all([
+    getProfile(userDb),
+    getUserSettings(userDb),
+    userDb.foods.toArray(),
+    userDb.dishes.toArray(),
+    userDb.dishItems.toArray()
   ]);
+
   state.profile = profile;
+  state.settings = settings;
   state.targets = calculateTargets(profile);
-  state.foods = foods.sort((a, b) => a.name.localeCompare(b.name));
-  state.dishes = dishes.sort((a, b) => a.name.localeCompare(b.name));
-  state.dishItems = dishItems;
+  state.foods = rawFoods.filter((f) => !f.deleted).sort((a, b) => a.name.localeCompare(b.name));
+  state.dishes = rawDishes.filter((d) => !d.deleted).sort((a, b) => a.name.localeCompare(b.name));
+  state.dishItems = rawDishItems.filter((di) => !di.deleted);
 
   populateFoodFilterOptions();
   populateLogItemSelector();
@@ -108,6 +264,7 @@ async function reloadCoreState() {
   renderDishesTab();
   renderProfileTab();
   updateBackupStatusUI();
+  resetInactivityTimer();
   await renderTodayTab();
   await renderStreaksTab();
 }
@@ -136,10 +293,10 @@ function populateFoodFilterOptions() {
 
 function getDishNutritionById(dishId, servings = 1) {
   const items = state.dishItems
-    .filter((di) => di.dishId === Number(dishId))
+    .filter((di) => di.dishId === String(dishId) && !di.deleted)
     .map((di) => ({
       grams: di.grams,
-      food: state.foods.find((f) => f.id === di.foodId)
+      food: state.foods.find((f) => f.id === String(di.foodId))
     }));
   return computeDishNutrition(items, servings);
 }
@@ -152,11 +309,11 @@ function populateLogItemSelector() {
 
   const refType = typeSel.value;
   if (refType === 'food') {
-    const activeFoods = state.foods.filter((f) => !f.archived);
+    const activeFoods = state.foods.filter((f) => !f.archived && !f.deleted);
     idSel.innerHTML = activeFoods
       .map(
         (f) =>
-          `<option value="${Number(f.id)}" data-serving="${Number(f.defaultServingG) || 100}">${escapeHtml(f.name)} (${fmt(f.per100?.kcal, 0)} kcal/100g)</option>`
+          `<option value="${escapeHtml(f.id)}" data-serving="${Number(f.defaultServingG) || 100}">${escapeHtml(f.name)} (${fmt(f.per100?.kcal, 0)} kcal/100g)</option>`
       )
       .join('');
     if (activeFoods[0] && gramsInput) {
@@ -166,7 +323,7 @@ function populateLogItemSelector() {
     idSel.innerHTML = state.dishes
       .map((d) => {
         const calc = getDishNutritionById(d.id, 1);
-        return `<option value="${Number(d.id)}" data-serving="${fmt(calc.totalGrams || 100, 0)}">${escapeHtml(d.name)} (${fmt(calc.per100.kcal, 0)} kcal/100g)</option>`;
+        return `<option value="${escapeHtml(d.id)}" data-serving="${fmt(calc.totalGrams || 100, 0)}">${escapeHtml(d.name)} (${fmt(calc.per100.kcal, 0)} kcal/100g)</option>`;
       })
       .join('');
     if (state.dishes[0] && gramsInput) {
@@ -179,13 +336,13 @@ function populateLogItemSelector() {
 function populateDrinkFoodSelector() {
   const sel = document.getElementById('water-drink-food-id');
   if (!sel) return;
-  const drinks = state.foods.filter((f) => !f.archived && Number(f.isDrink) === 1);
+  const drinks = state.foods.filter((f) => !f.archived && !f.deleted && Number(f.isDrink) === 1);
   sel.innerHTML =
     `<option value="">— No calories / unlinked —</option>` +
     drinks
       .map(
         (d) =>
-          `<option value="${Number(d.id)}">${escapeHtml(d.name)} (${fmt(d.per100?.kcal, 0)} kcal/100ml)</option>`
+          `<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)} (${fmt(d.per100?.kcal, 0)} kcal/100ml)</option>`
       )
       .join('');
 }
@@ -193,20 +350,24 @@ function populateDrinkFoodSelector() {
 function populateDishIngredientSelector() {
   const sel = document.getElementById('dish-ingredient-food');
   if (!sel) return;
-  const activeFoods = state.foods.filter((f) => !f.archived);
+  const activeFoods = state.foods.filter((f) => !f.archived && !f.deleted);
   sel.innerHTML = activeFoods
-    .map((f) => `<option value="${Number(f.id)}">${escapeHtml(f.name)} (${fmt(f.per100?.kcal, 0)} kcal/100g)</option>`)
+    .map((f) => `<option value="${escapeHtml(f.id)}">${escapeHtml(f.name)} (${fmt(f.per100?.kcal, 0)} kcal/100g)</option>`)
     .join('');
 }
 
 async function renderTodayTab() {
+  if (!state.userDb) return;
   const dateInput = document.getElementById('today-date-input');
   if (dateInput) dateInput.value = state.selectedDate;
 
-  const [dayLogs, dayWater] = await Promise.all([
-    db.log.where('date').equals(state.selectedDate).toArray(),
-    db.water.where('date').equals(state.selectedDate).toArray()
+  const [rawLogs, rawWater] = await Promise.all([
+    state.userDb.log.where('date').equals(state.selectedDate).toArray(),
+    state.userDb.water.where('date').equals(state.selectedDate).toArray()
   ]);
+
+  const dayLogs = rawLogs.filter((l) => !l.deleted);
+  const dayWater = rawWater.filter((w) => !w.deleted);
 
   const totals = sumNutrition(dayLogs.map((l) => l.snapshot));
   renderTodaySummary(totals, state.targets);
@@ -222,6 +383,7 @@ function renderFoodsTab() {
   const showArchived = Boolean(document.getElementById('food-show-archived')?.checked);
 
   const filtered = state.foods.filter((f) => {
+    if (f.deleted) return false;
     if (!showArchived && f.archived) return false;
     if (market && f.market !== market) return false;
     if (category && f.category !== category) return false;
@@ -251,7 +413,7 @@ function renderDraftDishUI() {
   const enriched = state.draftDishItems.map((item, idx) => ({
     idx,
     grams: item.grams,
-    food: state.foods.find((f) => f.id === Number(item.foodId))
+    food: state.foods.find((f) => f.id === String(item.foodId))
   }));
 
   listEl.innerHTML = enriched
@@ -298,8 +460,8 @@ function renderDishesTab() {
             ${d.notes ? `<div class="list-item-sub">${escapeHtml(d.notes)}</div>` : ''}
           </div>
           <div class="list-item-actions">
-            <button type="button" class="btn btn-sm" data-action="edit-dish" data-id="${Number(d.id)}">Edit</button>
-            <button type="button" class="btn btn-sm" data-action="delete-dish" data-id="${Number(d.id)}">Del</button>
+            <button type="button" class="btn btn-sm" data-action="edit-dish" data-id="${escapeHtml(d.id)}">Edit</button>
+            <button type="button" class="btn btn-sm" data-action="delete-dish" data-id="${escapeHtml(d.id)}">Del</button>
           </div>
         </div>
       `;
@@ -308,14 +470,21 @@ function renderDishesTab() {
 }
 
 async function renderStreaksTab() {
-  const [allLogs, allWater] = await Promise.all([db.log.toArray(), db.water.toArray()]);
+  if (!state.userDb) return;
+  const [rawLogs, rawWater] = await Promise.all([
+    state.userDb.log.toArray(),
+    state.userDb.water.toArray()
+  ]);
+
   const logsByDate = {};
-  for (const l of allLogs) {
+  for (const l of rawLogs) {
+    if (l.deleted) continue;
     if (!logsByDate[l.date]) logsByDate[l.date] = [];
     logsByDate[l.date].push(l);
   }
   const waterByDate = {};
-  for (const w of allWater) {
+  for (const w of rawWater) {
+    if (w.deleted) continue;
     if (!waterByDate[w.date]) waterByDate[w.date] = [];
     waterByDate[w.date].push(w);
   }
@@ -345,7 +514,25 @@ function renderProfileTab() {
     document.getElementById('prof-water-mlkg').value = p.waterMlPerKg ?? 35;
     document.getElementById('prof-currency').value = p.currency || '€';
     document.getElementById('prof-restdays').value = p.restDays || '';
+  } else {
+    document.getElementById('profile-form')?.reset();
   }
+
+  const autoLockSel = document.getElementById('settings-autolock');
+  if (autoLockSel && state.settings) {
+    autoLockSel.value = String(state.settings.autoLockMinutes ?? DEFAULT_AUTOLOCK_MIN);
+  }
+
+  const accSummary = document.getElementById('settings-account-summary');
+  if (accSummary && state.session) {
+    accSummary.textContent = `Signed in as ${state.session.displayName} (${state.session.login})`;
+  }
+
+  const verEl = document.getElementById('settings-app-version');
+  if (verEl) {
+    verEl.textContent = `v${APP_VERSION}`;
+  }
+
   renderProfileCalculated(state.targets);
 }
 
@@ -361,7 +548,7 @@ function updateFoodFormAtwaterCheck() {
   if (!warnBox) return;
 
   if (check.hasWarning) {
-    warnBox.textContent = `Label check: Macros estimate ${fmt(check.atwaterKcal, 0)} kcal/100g vs entered ${fmt(check.enteredKcal, 0)} kcal (${fmt(check.diffRatio * 100, 0)}% difference > 15%). Check for label typos.`;
+    warnBox.textContent = `Label check: Macros estimate ${fmt(check.atwaterKcal, 0)} kcal/100g vs entered ${fmt(check.enteredKcal, 0)} kcal (${fmt(check.diffRatio * 100, 0)}% difference). Check for label typos.`;
     warnBox.classList.remove('hidden');
   } else {
     warnBox.classList.add('hidden');
@@ -387,7 +574,188 @@ function parseCSVLine(line) {
   return result;
 }
 
-function bindEvents() {
+function triggerFileDownload(content, filename, mimeType = 'application/json') {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function bindAuthEvents() {
+  // Switch auth screens
+  document.getElementById('goto-signup-btn')?.addEventListener('click', () => showAuthPanel('auth-signup-panel'));
+  document.getElementById('goto-signin-from-signup-btn')?.addEventListener('click', () => showAuthPanel('auth-signin-panel'));
+  document.getElementById('goto-reset-btn')?.addEventListener('click', () => showAuthPanel('auth-reset-panel'));
+  document.getElementById('goto-signin-from-reset-btn')?.addEventListener('click', () => showAuthPanel('auth-signin-panel'));
+
+  // Show / Hide password toggles
+  document.querySelectorAll('button[data-toggle-password]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-toggle-password');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+      btn.textContent = isPwd ? 'Hide' : 'Show';
+    });
+  });
+
+  // Live password strength hints
+  const updateStrengthHint = (pwdInputId, loginInputId, hintElId) => {
+    const pwd = document.getElementById(pwdInputId)?.value || '';
+    const login = loginInputId ? document.getElementById(loginInputId)?.value || '' : '';
+    const hintEl = document.getElementById(hintElId);
+    if (!hintEl) return;
+    if (!pwd) {
+      hintEl.textContent = 'Minimum 10 characters.';
+      return;
+    }
+    const res = evaluatePasswordPolicy(pwd, login);
+    hintEl.textContent = res.message;
+  };
+
+  document.getElementById('signup-password')?.addEventListener('input', () =>
+    updateStrengthHint('signup-password', 'signup-login', 'signup-password-hint')
+  );
+  document.getElementById('reset-new-password')?.addEventListener('input', () =>
+    updateStrengthHint('reset-new-password', 'reset-login', 'reset-password-hint')
+  );
+  document.getElementById('settings-new-password')?.addEventListener('input', () =>
+    updateStrengthHint('settings-new-password', '', 'settings-password-hint')
+  );
+
+  // Pre-migration legacy backup button
+  document.getElementById('legacy-backup-btn')?.addEventListener('click', () => {
+    safeAuthRun(async () => {
+      const jsonStr = await authProvider.exportLegacyBackupJSON();
+      triggerFileDownload(jsonStr, `nutrilog-v0.1-legacy-backup-${formatLocalDate(new Date())}.json`);
+    });
+  });
+
+  // Sign In form
+  document.getElementById('signin-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeAuthRun(async () => {
+      const login = document.getElementById('signin-login').value;
+      const passwordInput = document.getElementById('signin-password');
+      const password = passwordInput.value;
+      const keepSignedIn = document.getElementById('signin-keep').checked;
+      passwordInput.value = '';
+      await authProvider.signIn({ login, password, keepSignedIn });
+    });
+  });
+
+  // Sign Up form
+  document.getElementById('signup-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeAuthRun(async () => {
+      const login = document.getElementById('signup-login').value;
+      const displayName = document.getElementById('signup-display-name').value;
+      const pwdInput = document.getElementById('signup-password');
+      const confirmInput = document.getElementById('signup-confirm-password');
+      const password = pwdInput.value;
+      const confirmPwd = confirmInput.value;
+      const acceptLegal = document.getElementById('signup-accept-legal').checked;
+      const confirmAge18 = document.getElementById('signup-confirm-age').checked;
+      const keepSignedIn = document.getElementById('signup-keep').checked;
+
+      if (password !== confirmPwd) {
+        throw new Error('Password and Confirm Password do not match.');
+      }
+
+      pwdInput.value = '';
+      confirmInput.value = '';
+
+      const { recoveryCode, migratedLegacy } = await authProvider.signUp({
+        login,
+        displayName,
+        password,
+        acceptLegal,
+        confirmAge18,
+        keepSignedIn
+      });
+
+      document.getElementById('signup-form').reset();
+
+      presentRecoveryCodeModal(recoveryCode, () => {
+        authProvider.notifySignedIn();
+        if (migratedLegacy) {
+          showBanner('Legacy v0.1 data migrated and verified in your new account.', 'info');
+        }
+      });
+    });
+  });
+
+  // Recovery code display actions
+  document.getElementById('recovery-copy-btn')?.addEventListener('click', () => {
+    const code = document.getElementById('recovery-code-display')?.textContent || '';
+    if (navigator.clipboard && code) {
+      navigator.clipboard.writeText(code).catch(() => {});
+    }
+  });
+
+  document.getElementById('recovery-download-btn')?.addEventListener('click', () => {
+    const code = document.getElementById('recovery-code-display')?.textContent || '';
+    if (!code) return;
+    const content = `NutriLog Account Recovery Code\r\nGenerated: ${new Date().toISOString()}\r\nRecovery Code: ${code}\r\n\r\nKeep this code safe. Without your password or this recovery code, your account cannot be unlocked.\r\n`;
+    triggerFileDownload(content, 'nutrilog-recovery-code.txt', 'text/plain');
+  });
+
+  document.getElementById('recovery-saved-checkbox')?.addEventListener('change', (e) => {
+    const btn = document.getElementById('recovery-continue-btn');
+    if (btn) btn.disabled = !e.target.checked;
+  });
+
+  document.getElementById('recovery-continue-btn')?.addEventListener('click', () => {
+    const codeEl = document.getElementById('recovery-code-display');
+    if (codeEl) codeEl.textContent = '';
+    const cb = state.pendingRecoveryDoneAction;
+    state.pendingRecoveryDoneAction = null;
+    if (typeof cb === 'function') cb();
+  });
+
+  // Reset Password with Recovery Code
+  document.getElementById('reset-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeAuthRun(async () => {
+      const login = document.getElementById('reset-login').value;
+      const recoveryCodeInput = document.getElementById('reset-recovery-code');
+      const newPwdInput = document.getElementById('reset-new-password');
+      const confirmPwdInput = document.getElementById('reset-confirm-password');
+
+      if (newPwdInput.value !== confirmPwdInput.value) {
+        throw new Error('New password and confirmation do not match.');
+      }
+
+      const recoveryCode = recoveryCodeInput.value;
+      const newPassword = newPwdInput.value;
+      recoveryCodeInput.value = '';
+      newPwdInput.value = '';
+      confirmPwdInput.value = '';
+
+      const res = await authProvider.resetPasswordWithRecovery(login, recoveryCode, newPassword);
+      document.getElementById('reset-form').reset();
+
+      presentRecoveryCodeModal(res.recoveryCode, () => {
+        showAuthPanel('auth-signin-panel');
+        const loginField = document.getElementById('signin-login');
+        if (loginField) loginField.value = login;
+      });
+    });
+  });
+
+  // Header Lock Now button
+  document.getElementById('header-lock-btn')?.addEventListener('click', () => {
+    safeRun(async () => {
+      await authProvider.signOut('locked');
+    });
+  });
+}
+
+function bindAppEvents() {
   // Bottom Tab Navigation
   document.querySelectorAll('.nav-tab').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -438,9 +806,10 @@ function bindEvents() {
   document.getElementById('log-entry-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     safeRun(async () => {
+      if (!state.userDb) return;
       const meal = document.getElementById('log-meal').value;
       const refType = document.getElementById('log-ref-type').value;
-      const refId = Number(document.getElementById('log-ref-id').value);
+      const refId = String(document.getElementById('log-ref-id').value);
       const grams = Number(document.getElementById('log-grams').value);
       if (!refId || grams <= 0) throw new Error('Select a valid item and positive gram amount.');
 
@@ -460,7 +829,7 @@ function bindEvents() {
       }
 
       const scaled = scaleNutrition(per100, grams);
-      await db.log.add({
+      await state.userDb.log.add({
         date: state.selectedDate,
         meal,
         refType,
@@ -470,8 +839,7 @@ function bindEvents() {
           name: itemName,
           per100,
           ...scaled
-        },
-        createdAt: Date.now()
+        }
       });
       await renderTodayTab();
       await renderStreaksTab();
@@ -481,12 +849,12 @@ function bindEvents() {
   // Edit / Delete Today Log
   document.getElementById('today-log-list')?.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const id = Number(btn.dataset.id);
+    if (!btn || !state.userDb) return;
+    const id = String(btn.dataset.id);
 
     if (btn.dataset.action === 'delete-log') {
       safeRun(async () => {
-        await db.log.delete(id);
+        await softDeleteRecord(state.userDb.log, id);
         await renderTodayTab();
         await renderStreaksTab();
       });
@@ -500,11 +868,13 @@ function bindEvents() {
         return;
       }
       safeRun(async () => {
-        const existing = await db.log.get(id);
-        if (!existing) return;
-        const basePer100 = existing.snapshot?.per100 || scaleNutrition(existing.snapshot, 10000 / (existing.grams || 100));
+        const existing = await state.userDb.log.get(id);
+        if (!existing || existing.deleted) return;
+        const basePer100 =
+          existing.snapshot?.per100 ||
+          scaleNutrition(existing.snapshot, 10000 / (existing.grams || 100));
         const rescaled = scaleNutrition(basePer100, newGrams);
-        await db.log.update(id, {
+        await state.userDb.log.update(id, {
           grams: newGrams,
           snapshot: {
             ...existing.snapshot,
@@ -523,12 +893,12 @@ function bindEvents() {
     btn.addEventListener('click', () => {
       const ml = Number(btn.dataset.ml);
       safeRun(async () => {
-        await db.water.add({
+        if (!state.userDb) return;
+        await state.userDb.water.add({
           date: state.selectedDate,
           ml,
           type: 'water',
-          label: 'Water',
-          createdAt: Date.now()
+          label: 'Water'
         });
         await renderTodayTab();
         await renderStreaksTab();
@@ -544,9 +914,10 @@ function bindEvents() {
   document.getElementById('water-custom-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     safeRun(async () => {
+      if (!state.userDb) return;
       const ml = Number(document.getElementById('water-custom-ml').value);
       const type = document.getElementById('water-custom-type').value;
-      const linkedFoodId = Number(document.getElementById('water-drink-food-id').value);
+      const linkedFoodId = String(document.getElementById('water-drink-food-id').value || '');
       let label = document.getElementById('water-custom-label').value.trim();
 
       if (!ml || ml <= 0) throw new Error('Enter a valid fluid volume in ml.');
@@ -557,7 +928,7 @@ function bindEvents() {
           if (!label) label = drinkFood.name;
           const per100 = { ...drinkFood.per100, micros: { ...(drinkFood.per100?.micros || {}) } };
           const scaled = scaleNutrition(per100, ml);
-          await db.log.add({
+          await state.userDb.log.add({
             date: state.selectedDate,
             meal: 'Snack',
             refType: 'food',
@@ -567,18 +938,16 @@ function bindEvents() {
               name: `${drinkFood.name} (Drink)`,
               per100,
               ...scaled
-            },
-            createdAt: Date.now()
+            }
           });
         }
       }
 
-      await db.water.add({
+      await state.userDb.water.add({
         date: state.selectedDate,
         ml,
         type,
-        label: label || (type === 'water' ? 'Water' : 'Drink'),
-        createdAt: Date.now()
+        label: label || (type === 'water' ? 'Water' : 'Drink')
       });
 
       document.getElementById('water-custom-ml').value = '';
@@ -590,9 +959,9 @@ function bindEvents() {
 
   document.getElementById('water-log-list')?.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action="delete-water"]');
-    if (!btn) return;
+    if (!btn || !state.userDb) return;
     safeRun(async () => {
-      await db.water.delete(Number(btn.dataset.id));
+      await softDeleteRecord(state.userDb.water, btn.dataset.id);
       await renderTodayTab();
       await renderStreaksTab();
     });
@@ -616,8 +985,9 @@ function bindEvents() {
   document.getElementById('food-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     safeRun(async () => {
-      const editId = document.getElementById('food-id').value;
-      const existing = editId ? await db.foods.get(Number(editId)) : null;
+      if (!state.userDb) return;
+      const editId = document.getElementById('food-id').value.trim();
+      const existing = editId ? await state.userDb.foods.get(editId) : null;
 
       const record = {
         name: document.getElementById('food-name').value.trim(),
@@ -642,14 +1012,14 @@ function bindEvents() {
           : null,
         source: document.getElementById('food-source').value.trim() || 'user-label',
         archived: existing ? existing.archived : 0,
-        updatedAt: Date.now()
+        deleted: false
       };
 
       if (editId) {
-        await db.foods.update(Number(editId), record);
+        await state.userDb.foods.update(editId, record);
         showBanner(`Updated "${record.name}". Past logs remain unchanged.`, 'info');
       } else {
-        await db.foods.add(record);
+        await state.userDb.foods.add(record);
         showBanner(`Added "${record.name}" to database.`, 'info');
       }
       resetFoodForm();
@@ -667,8 +1037,8 @@ function bindEvents() {
 
   document.getElementById('foods-list')?.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const id = Number(btn.dataset.id);
+    if (!btn || !state.userDb) return;
+    const id = String(btn.dataset.id);
 
     if (btn.dataset.action === 'edit-food') {
       const food = state.foods.find((f) => f.id === id);
@@ -696,54 +1066,50 @@ function bindEvents() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (btn.dataset.action === 'delete-food') {
       safeRun(async () => {
-        const res = await deleteOrArchiveFood(id);
+        const res = await deleteOrArchiveFood(state.userDb, id);
         if (res.action === 'archived') {
           showBanner(
             `Food is referenced ${res.totalUses} time(s) in dishes or logs. Archived (hidden from active search) to preserve history.`,
             'warn'
           );
         } else {
-          showBanner('Unused food permanently deleted.', 'info');
+          showBanner('Unused food removed.', 'info');
         }
         await reloadCoreState();
       });
     }
   });
 
-  // Export / Import JSON & CSV
+  // Export / Import JSON & CSV (Scoped to Current Account)
   async function handleExportJSON() {
     safeRun(async () => {
-      const jsonStr = await exportFullDatabaseJSON();
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `nutrilog-backup-${formatLocalDate(new Date())}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      if (!state.userDb || !state.session) return;
+      const jsonStr = await exportUserDbJSON(state.userDb, state.session.accountId, { includeDeleted: true });
+      triggerFileDownload(jsonStr, `nutrilog-backup-${state.session.login}-${formatLocalDate(new Date())}.json`);
       await reloadCoreState();
-      showBanner('Full database exported as JSON.', 'info');
+      showBanner('Account database exported as JSON.', 'info');
     });
   }
 
   document.getElementById('export-json-btn')?.addEventListener('click', handleExportJSON);
   document.getElementById('backup-now-btn')?.addEventListener('click', handleExportJSON);
+  document.getElementById('settings-export-btn')?.addEventListener('click', handleExportJSON);
 
   document.getElementById('import-json-input')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !state.userDb) return;
     safeRun(async () => {
       const text = await file.text();
-      await importFullDatabaseJSON(text);
+      await importUserDbJSON(state.userDb, text);
       e.target.value = '';
       await reloadCoreState();
-      showBanner('Database restored from JSON backup.', 'info');
+      showBanner('Account database restored from JSON backup.', 'info');
     });
   });
 
   document.getElementById('import-csv-input')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !state.userDb) return;
     safeRun(async () => {
       const text = await file.text();
       const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -779,11 +1145,11 @@ function bindEvents() {
           pricePerKg: row.pricePerKg ? Number(row.pricePerKg) : null,
           source: row.source || 'csv-import',
           archived: 0,
-          updatedAt: Date.now()
+          deleted: false
         });
       }
       if (toAdd.length > 0) {
-        await db.foods.bulkAdd(toAdd);
+        await state.userDb.foods.bulkAdd(toAdd);
       }
       e.target.value = '';
       await reloadCoreState();
@@ -795,7 +1161,7 @@ function bindEvents() {
   document.getElementById('dish-servings')?.addEventListener('input', renderDraftDishUI);
 
   document.getElementById('dish-add-ingredient-btn')?.addEventListener('click', () => {
-    const foodId = Number(document.getElementById('dish-ingredient-food')?.value);
+    const foodId = String(document.getElementById('dish-ingredient-food')?.value || '');
     const grams = Number(document.getElementById('dish-ingredient-grams')?.value);
     if (!foodId || grams <= 0) {
       showBanner('Select an ingredient and enter a positive gram weight.', 'warn');
@@ -826,13 +1192,14 @@ function bindEvents() {
   document.getElementById('dish-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     safeRun(async () => {
+      if (!state.userDb) return;
       if (state.draftDishItems.length === 0) {
         throw new Error('Add at least one food ingredient to save the dish.');
       }
-      const id = document.getElementById('dish-id').value;
+      const id = document.getElementById('dish-id').value.trim();
       const name = document.getElementById('dish-name').value.trim();
       const notes = document.getElementById('dish-notes').value.trim();
-      await saveDishWithItems({ id, name, notes }, state.draftDishItems);
+      await saveDishWithItems(state.userDb, { id, name, notes }, state.draftDishItems);
       resetDishForm();
       await reloadCoreState();
       showBanner(`Saved dish "${name}".`, 'info');
@@ -841,8 +1208,8 @@ function bindEvents() {
 
   document.getElementById('dishes-list')?.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const id = Number(btn.dataset.id);
+    if (!btn || !state.userDb) return;
+    const id = String(btn.dataset.id);
 
     if (btn.dataset.action === 'edit-dish') {
       const dish = state.dishes.find((d) => d.id === id);
@@ -851,7 +1218,7 @@ function bindEvents() {
       document.getElementById('dish-name').value = dish.name;
       document.getElementById('dish-notes').value = dish.notes || '';
       state.draftDishItems = state.dishItems
-        .filter((di) => di.dishId === id)
+        .filter((di) => di.dishId === id && !di.deleted)
         .map((di) => ({ foodId: di.foodId, grams: di.grams }));
       document.getElementById('dish-form-title').textContent = `Edit Dish: ${dish.name}`;
       document.getElementById('dish-form-reset-btn').classList.remove('hidden');
@@ -859,14 +1226,14 @@ function bindEvents() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (btn.dataset.action === 'delete-dish') {
       safeRun(async () => {
-        await deleteDish(id);
+        await softDeleteDish(state.userDb, id);
         await reloadCoreState();
         showBanner('Dish deleted.', 'info');
       });
     }
   });
 
-  // Profile Form
+  // Biometric Profile Form
   document.getElementById('prof-goal')?.addEventListener('change', (e) => {
     document.getElementById('prof-protein-gkg').value = getDefaultProteinPerKg(e.target.value);
   });
@@ -874,7 +1241,8 @@ function bindEvents() {
   document.getElementById('profile-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     safeRun(async () => {
-      await saveProfile({
+      if (!state.userDb) return;
+      await saveProfile(state.userDb, {
         sex: document.getElementById('prof-sex').value,
         age: Number(document.getElementById('prof-age').value),
         heightCm: Number(document.getElementById('prof-height').value),
@@ -889,17 +1257,102 @@ function bindEvents() {
         restDays: document.getElementById('prof-restdays').value.trim()
       });
       await reloadCoreState();
-      showBanner('Profile and physiological targets saved.', 'info');
+      showBanner('Biometric profile and physiological targets saved.', 'info');
+    });
+  });
+
+  // Settings & Security Actions inside Profile Tab
+  document.getElementById('settings-autolock')?.addEventListener('change', (e) => {
+    safeRun(async () => {
+      if (!state.userDb) return;
+      const autoLockMinutes = Number(e.target.value);
+      state.settings = await saveUserSettings(state.userDb, { autoLockMinutes });
+      resetInactivityTimer();
+      showBanner('Auto-lock timer updated.', 'info');
+    });
+  });
+
+  document.getElementById('settings-lock-btn')?.addEventListener('click', () => {
+    safeRun(async () => {
+      await authProvider.signOut('locked');
+    });
+  });
+
+  document.getElementById('settings-signout-btn')?.addEventListener('click', () => {
+    safeRun(async () => {
+      await authProvider.signOut('signout');
+    });
+  });
+
+  document.getElementById('settings-password-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeRun(async () => {
+      const curInput = document.getElementById('settings-current-password');
+      const newInput = document.getElementById('settings-new-password');
+      const confInput = document.getElementById('settings-confirm-password');
+
+      if (newInput.value !== confInput.value) {
+        throw new Error('New password and confirmation do not match.');
+      }
+
+      const cur = curInput.value;
+      const next = newInput.value;
+      curInput.value = '';
+      newInput.value = '';
+      confInput.value = '';
+
+      await authProvider.changePassword(cur, next);
+      showBanner('Password updated.', 'info');
+    });
+  });
+
+  document.getElementById('settings-remove-legacy-btn')?.addEventListener('click', () => {
+    const ok = window.confirm(
+      'Remove the legacy v0.1 database from this device? Your migrated account data will remain intact.'
+    );
+    if (!ok) return;
+    safeRun(async () => {
+      await authProvider.removeLegacyDatabase();
+      await refreshLegacyNoticeUI();
+      showBanner('Legacy v0.1 database removed.', 'info');
+    });
+  });
+
+  document.getElementById('settings-delete-account-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeRun(async () => {
+      const pwdInput = document.getElementById('delete-account-password');
+      const confirmInput = document.getElementById('delete-account-confirm-text');
+      const pwd = pwdInput.value;
+      const confirmText = confirmInput.value;
+      pwdInput.value = '';
+      confirmInput.value = '';
+      await authProvider.deleteAccount(pwd, confirmText);
     });
   });
 }
 
 async function bootstrap() {
-  bindEvents();
+  bindAuthEvents();
+  bindAppEvents();
+  bindActivityListeners();
+
+  authProvider.onAuthChange((session, meta) => {
+    if (session) {
+      safeRun(() => enterAuthenticatedApp(session));
+    } else {
+      safeRun(() => enterLockedAuthView(meta));
+    }
+  });
+
   await safeRun(async () => {
-    await initDatabase();
-    await reloadCoreState();
-    await initPersistenceAndBackupCheck();
+    await authProvider.init();
+    const existingSession = await authProvider.getSession();
+    if (existingSession) {
+      await enterAuthenticatedApp(existingSession);
+    } else {
+      await enterLockedAuthView();
+    }
   });
 
   if ('serviceWorker' in navigator) {

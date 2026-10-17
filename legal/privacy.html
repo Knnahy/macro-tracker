@@ -1,0 +1,736 @@
+<!-- Path: legal/privacy.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriLog — Política de Privacidad / Privacy Policy</title>
+  <link rel="stylesheet" href="legal.css">
+</head>
+<body>
+  <input type="radio" name="lang-toggle" id="lang-es" class="lang-radio" checked>
+  <input type="radio" name="lang-toggle" id="lang-en" class="lang-radio">
+
+  <header class="site-header">
+    <div class="draft-banner" role="status">
+      <strong>Borrador: sin revisión legal</strong> / <strong>Draft: not legally reviewed</strong>
+    </div>
+    <nav class="top-nav" aria-label="Navegación principal / Main navigation">
+      <a href="../index.html" class="back-link">
+        <span class="i18n-es">&larr; Volver a la app</span>
+        <span class="i18n-en">&larr; Back to app</span>
+      </a>
+      <div class="lang-switch" role="group" aria-label="Selector de idioma / Language switch">
+        <label for="lang-es" class="lang-btn" lang="es">Español</label>
+        <label for="lang-en" class="lang-btn" lang="en">English</label>
+      </div>
+    </nav>
+  </header>
+
+  <main class="legal-main">
+    <!-- ==================== SPANISH VERSION (REFERENCE) ==================== -->
+    <section lang="es" id="es" class="lang-section">
+      <h1>Política de Privacidad y de Tratamiento de Datos Personales</h1>
+      <dl class="doc-meta">
+        <div><dt>Versión (`PRIVACY_VERSION`):</dt><dd>0.2.0</dd></div>
+        <div><dt>Fecha de entrada en vigor:</dt><dd><span class="pending">[PENDING]</span></dd></div>
+        <div><dt>Última revisión:</dt><dd>2026-10-17</dd></div>
+        <div><dt>Modo operativo:</dt><dd>MODO A (Solo almacenamiento local en el navegador). Incluye anexo para MODO B al final (no vigente hasta el lanzamiento en la nube).</dd></div>
+        <div><dt>Estado:</dt><dd>DRAFT: not legally reviewed (Borrador: sin revisión legal)</dd></div>
+      </dl>
+
+      <nav class="toc" aria-label="Índice de contenidos">
+        <h2>Índice de Contenidos</h2>
+        <ol>
+          <li><a href="#es-sec-1">1. Definiciones Breves en Lenguaje Claro</a></li>
+          <li><a href="#es-sec-2">2. Identidad del Responsable del Tratamiento</a></li>
+          <li><a href="#es-sec-3">3. Cómo Funciona la Privacidad en el MODO A (Actual y Único Vigente)</a></li>
+          <li><a href="#es-sec-4">4. Aviso de Almacenamiento Técnico Local y Cookies (MODO A)</a></li>
+          <li><a href="#es-sec-5">5. Conservación y Supresión de Datos en el MODO A</a></li>
+          <li><a href="#es-sec-6">6. Derechos sobre tus Datos Personales (ARCO y RGPD) y Cómo Ejercerlos</a></li>
+          <li><a href="#es-sec-7">7. Cambios en esta Política e Idioma Prevalente</a></li>
+          <li><a href="#es-sec-8">8. Contacto</a></li>
+          <li><a href="#es-sec-9">9. Anexo MODO B: Tratamiento de Datos en la Nube</a></li>
+        </ol>
+      </nav>
+
+      <section id="es-sec-1" class="doc-section">
+        <h2>1. Definiciones Breves en Lenguaje Claro</h2>
+        <ul>
+          <li><strong>Datos personales:</strong> Cualquier información que permite identificarte (por ejemplo, tu nombre, correo electrónico o dirección IP).</li>
+          <li><strong>Datos sensibles o relativos a la salud:</strong> Información sobre tu estado físico o salud (como tu peso, altura, edad, sexo, metas calóricas y registro de alimentos).</li>
+          <li><strong>Responsable del tratamiento (Controller):</strong> La persona o entidad que decide por qué y cómo se tratan tus datos personales.</li>
+          <li><strong>Encargado del tratamiento (Processor):</strong> Un proveedor externo que trata datos por cuenta del Responsable (por ejemplo, un servicio de alojamiento).</li>
+        </ul>
+      </section>
+
+      <section id="es-sec-2" class="doc-section">
+        <h2>2. Identidad del Responsable del Tratamiento</h2>
+        <ul>
+          <li><strong>Nombre o razón social:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Forma jurídica:</strong> <span class="pending">[PENDING: natural person / autonomo / SAS / SL ...]</span></li>
+          <li><strong>Identificación tributaria (NIT / NIF):</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Dirección postal:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>País de establecimiento:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Correo electrónico de privacidad y soporte:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Delegado de Protección de Datos (DPO) / Oficial de Protección de Datos:</strong> <span class="pending">[PENDING or "none appointed"]</span></li>
+        </ul>
+        <p class="note-text"><em>Nota sobre reformas legislativas en Colombia: Los Proyectos de Ley Estatutaria 214/2025 y 274/2025 <span class="verified">[VERIFIED]</span> en trámite en el Congreso de Colombia podrían exigir o modificar la figura del Oficial de Protección de Datos. Esta sección se actualizará si dicha reforma entra en vigor.</em></p>
+      </section>
+
+      <section id="es-sec-3" class="doc-section">
+        <h2>3. Cómo Funciona la Privacidad en el MODO A (Actual y Único Vigente)</h2>
+        <p>En el <strong>MODO A</strong>, NutriLog se ejecuta de forma local dentro del navegador de tu dispositivo:</p>
+        <ol>
+          <li><strong>El operador NO recibe tus datos ni tus credenciales:</strong> Las cuentas y el inicio de sesión existen únicamente en el dispositivo del usuario; nada se envía al operador. Todos los datos que introduces (nombre de inicio de sesión, nombre visible, sexo, edad, altura, peso, nivel de actividad, objetivos, registros de comida, bebida y agua, y rachas) permanecen en el navegador de tu dispositivo (<strong>IndexedDB</strong>).</li>
+          <li><strong>Contraseñas (hash PBKDF2) y código de recuperación:</strong> Las contraseñas se almacenan únicamente como hashes PBKDF2 y se muestra un código de recuperación una sola vez al crear la cuenta. Sin la contraseña o el código de recuperación, nadie puede recuperar los datos.</li>
+          <li><strong>Controles de sesión local:</strong> Puedes activar opcionalmente "mantener la sesión iniciada" durante 30 días. La aplicación cuenta con bloqueo automático por inactividad y bloqueo tras 5 intentos fallidos de inicio de sesión.</li>
+          <li><strong>Sin cifrado en reposo:</strong> Los datos en el navegador <strong>NO están cifrados en reposo</strong>; el inicio de sesión local únicamente controla el acceso en dispositivos compartidos. Eres responsable de proteger tu dispositivo y de no usar equipos públicos si deseas mantener tus datos privados.</li>
+          <li><strong>Registros del alojamiento estático (GitHub Pages):</strong> El sitio estático está alojado en <strong>GitHub Pages</strong> (operado por GitHub, Inc., en Estados Unidos), que puede registrar las <strong>direcciones IP</strong> de los visitantes por motivos técnicos y de seguridad de la red. El operador de NutriLog no cruza esos registros con tu actividad local.</li>
+        </ol>
+      </section>
+
+      <section id="es-sec-4" class="doc-section">
+        <h2>4. Aviso de Almacenamiento Técnico Local y Cookies (MODO A)</h2>
+        <p>NutriLog <strong>no utiliza cookies publicitarias, ni cookies de analítica, ni rastreadores de terceros</strong>. Utiliza únicamente almacenamiento técnico en tu propio navegador:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tecnología</th>
+                <th>Tipo</th>
+                <th>Propósito estrictamente técnico</th>
+                <th>¿Se envía al operador?</th>
+                <th>Duración</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>IndexedDB</strong></td>
+                <td>Base de datos local del navegador</td>
+                <td>Guardar tu perfil local, el hash PBKDF2 de tu contraseña, metas y registros de comidas, bebidas, agua, peso y rachas en tu dispositivo.</td>
+                <td><strong>No.</strong> Permanece solo en tu dispositivo.</td>
+                <td>Hasta que elimines tu cuenta dentro de la app o borres los datos del navegador.</td>
+              </tr>
+              <tr>
+                <td><strong>LocalStorage / SessionStorage</strong></td>
+                <td>Almacenamiento técnico de sesión</td>
+                <td>Gestionar la opción de mantener sesión iniciada (hasta 30 días), el bloqueo automático y el contador de bloqueo tras 5 intentos fallidos.</td>
+                <td><strong>No.</strong></td>
+                <td>30 días (si activas mantener sesión) o hasta cerrar sesión / borrar datos.</td>
+              </tr>
+              <tr>
+                <td><strong>Service Worker y Cache Storage</strong></td>
+                <td>Caché técnica de archivos</td>
+                <td>Guardar en caché el código, iconos y estilos de NutriLog para que funcione sin conexión (offline).</td>
+                <td><strong>No.</strong></td>
+                <td>Hasta que desinstales la PWA o limpies la caché del navegador.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.1. Exención Legal por Almacenamiento Estrictamente Técnico</h3>
+        <ul>
+          <li><strong>En España y la Unión Europea:</strong> Conforme al <strong>artículo 22.2 de la Ley 34/2002 (LSSI-CE)</strong> <span class="verified">[VERIFIED]</span> y las guías de la Agencia Española de Protección de Datos (AEPD), este almacenamiento local está exento de requerir un banner de consentimiento de cookies porque su única finalidad es prestar el servicio de autorregistro local expresamente solicitado por el usuario. <em>(Nota de mantenimiento: Si la futura reforma del paquete Digital Omnibus de la UE modifica las reglas sobre acceso al almacenamiento del dispositivo, esta sección se actualizará).</em></li>
+          <li><strong>En Colombia:</strong> El almacenamiento ocurre únicamente en tu propio equipo para ejecutar la herramienta solicitada por ti, sin recolección en servidores del operador (Ley 1581 de 2012 <span class="verified">[VERIFIED]</span> y Ley 527 de 1999 <span class="verified">[VERIFIED]</span>).</li>
+        </ul>
+      </section>
+
+      <section id="es-sec-5" class="doc-section">
+        <h2>5. Conservación y Supresión de Datos en el MODO A</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoría de datos</th>
+                <th>Dónde se guarda</th>
+                <th>Conservación y regla sobre registros eliminados (<em>soft-delete</em>)</th>
+                <th>Cómo se suprime definitivamente</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Perfil local, credenciales (hash PBKDF2) y registros diarios</strong></td>
+                <td>Navegador de tu dispositivo (<code>IndexedDB</code>)</td>
+                <td>Se conservan en tu dispositivo mientras mantengas tu cuenta local. <strong>Importante:</strong> Los registros eliminados individualmente (borrado lógico o <em>soft-deleted records</em>) permanecen en el dispositivo hasta que se elimina la cuenta.</td>
+                <td><strong>Inmediato e irreversible:</strong> Al usar la opción <strong>"Eliminar cuenta"</strong> dentro de la app (que borra todos los datos locales, incluidos los registros con borrado lógico) o al borrar los datos del sitio en tu navegador.</td>
+              </tr>
+              <tr>
+                <td><strong>Registros técnicos de red (IP)</strong></td>
+                <td>Servidores de GitHub Pages (GitHub, Inc.)</td>
+                <td>Según las políticas técnicas de seguridad de GitHub, Inc.</td>
+                <td>Gestionado automáticamente por GitHub, Inc.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="es-sec-6" class="doc-section">
+        <h2>6. Derechos sobre tus Datos Personales (ARCO y RGPD) y Cómo Ejercerlos</h2>
+
+        <h3>6.1. Ejercicio Directo dentro de la Aplicación (MODO A)</h3>
+        <p>Como en el MODO A el operador no recibe ni almacena tus datos, puedes ejercer tus derechos directamente y de inmediato dentro de NutriLog:</p>
+        <ol>
+          <li><strong>Exportar todos tus datos (Acceso y Portabilidad):</strong> Exporta todos tus datos en formato <strong>JSON</strong> desde dentro de la aplicación.</li>
+          <li><strong>Editar datos y cambiar contraseña (Rectificación y Actualización):</strong> Corrige cualquier dato de tu perfil o registro diario y cambia tu contraseña dentro de la aplicación.</li>
+          <li><strong>Eliminar tu cuenta (Supresión / Cancelación):</strong> Elimina tu cuenta dentro de la aplicación para borrar por completo todos tus datos locales (incluidos los registros con borrado lógico).</li>
+        </ol>
+
+        <h3>6.2. Cuadro Resumen de Derechos Legales por País</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Derecho</th>
+                <th>En qué consiste</th>
+                <th>Colombia (Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>)</th>
+                <th>España / UE (RGPD <span class="verified">[VERIFIED]</span> y LOPDGDD <span class="verified">[VERIFIED]</span>)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Acceso / Conocer</strong></td>
+                <td>Saber qué datos tuyos se tratan y obtener copia de ellos.</td>
+                <td>Art. 8.a y Art. 14 (Consultas) <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 15 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Rectificación / Actualización</strong></td>
+                <td>Corregir datos inexactos, incompletos o desactualizados.</td>
+                <td>Art. 8.a y Art. 15 (Reclamos) <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 16 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Supresión / Olvido</strong></td>
+                <td>Solicitar la eliminación de tus datos personales.</td>
+                <td>Art. 8.e y Art. 15 <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 17 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Revocatoria / Retirar consentimiento</strong></td>
+                <td>Retirar la autorización o el consentimiento otorgado.</td>
+                <td>Art. 8.e y Art. 9 <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 7.3 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Portabilidad</strong></td>
+                <td>Recibir tus datos en un formato estructurado y de lectura mecánica (JSON).</td>
+                <td>Disponible vía exportación JSON en la app</td>
+                <td>Art. 20 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Limitación del tratamiento</strong></td>
+                <td>Solicitar que se suspenda temporalmente el uso de tus datos en ciertos supuestos legales.</td>
+                <td>N/A (aplica leyenda "reclamo en trámite", Art. 15.2 <span class="verified">[VERIFIED]</span>)</td>
+                <td>Art. 18 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Oposición</strong></td>
+                <td>Oponerte al tratamiento basado en interés legítimo.</td>
+                <td>Puedes revocar autorización / reclamar</td>
+                <td>Art. 21 RGPD <span class="verified">[VERIFIED]</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>6.3. Procedimiento por Correo Electrónico y Plazos Legales de Respuesta</h3>
+        <p>Para realizar cualquier consulta o ejercer tus derechos por escrito (especialmente en relación con correos enviados a soporte o cuando entre en vigor el MODO B), escribe a <span class="pending">[PENDING]</span> indicando tu nombre, tu solicitud y, si actúas en representación de otra persona, la acreditación correspondiente.</p>
+
+        <h4>A. Plazos Legales en Colombia (Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>)</h4>
+        <ol>
+          <li><strong>Consultas (artículo 14 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>):</strong> Se atenderán en un plazo máximo de <strong>diez (10) días hábiles</strong> contados desde la fecha de recibo. Si no es posible responder en ese plazo, te informaremos antes del vencimiento los motivos de la demora y la nueva fecha de respuesta, que no superará los <strong>cinco (5) días hábiles</strong> siguientes al vencimiento del primer término.</li>
+          <li><strong>Reclamos de corrección, actualización, supresión o revocatoria (artículo 15 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>):</strong>
+            <ul>
+              <li><strong>Reclamo incompleto:</strong> Te requeriremos dentro de los <strong>cinco (5) días hábiles</strong> siguientes a la recepción para que subsanes las fallas. Si transcurren <strong>dos (2) meses</strong> sin que presentes la información requerida, se entenderá que has desistido.</li>
+              <li><strong>Leyenda en base de datos:</strong> Una vez recibido el reclamo completo (en MODO B), se incluirá la leyenda <em>"reclamo en trámite"</em> en un plazo no mayor a <strong>dos (2) días hábiles</strong>.</li>
+              <li><strong>Plazo de respuesta:</strong> Máximo <strong>quince (15) días hábiles</strong> contados a partir del día siguiente a la fecha de su recibo. Si no es posible atenderlo en ese término, te informaremos los motivos y la nueva fecha, que en ningún caso superará los <strong>ocho (8) días hábiles</strong> siguientes al vencimiento del primer término.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4>B. Plazos Legales en España y la Unión Europea (RGPD, artículos 12.3 y 12.5 <span class="verified">[VERIFIED]</span>)</h4>
+        <p>Responderemos sin dilación indebida y, a más tardar, en el plazo de <strong>un (1) mes</strong> a partir de la recepción de la solicitud. Este plazo podrá prorrogarse otros <strong>dos (2) meses</strong> en caso necesario según la complejidad y el número de solicitudes, informándote de la prórroga y sus motivos dentro del primer mes. El ejercicio de derechos es gratuito (art. 12.5 RGPD <span class="verified">[VERIFIED]</span>).</p>
+
+        <h3>6.4. Autoridades de Control para Presentar Reclamaciones</h3>
+        <ul>
+          <li><strong>En Colombia:</strong> <strong>Superintendencia de Industria y Comercio (SIC)</strong> (www.sic.gov.co), una vez agotado el trámite previo de consulta o reclamo ante el operador conforme al artículo 16 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>En España / UE:</strong> <strong>Agencia Española de Protección de Datos (AEPD)</strong> (www.aepd.es) o la autoridad de protección de datos de tu país de residencia en la UE.</li>
+        </ul>
+      </section>
+
+      <section id="es-sec-7" class="doc-section">
+        <h2>7. Cambios en esta Política e Idioma Prevalente</h2>
+        <p>Cualquier actualización de esta Política se publicará en la aplicación indicando el nuevo número de versión (<code>PRIVACY_VERSION</code>) y su fecha de revisión. <strong>El texto en español es la versión de referencia y prevalecerá si las versiones difieren.</strong></p>
+      </section>
+
+      <section id="es-sec-8" class="doc-section">
+        <h2>8. Contacto</h2>
+        <p>Para cualquier duda o solicitud sobre privacidad y protección de datos, escríbenos a: <span class="pending">[PENDING]</span>.</p>
+      </section>
+
+      <!-- MODE B -->
+      <section id="es-sec-9" class="doc-section mode-b-box" aria-label="Anexo Modo B">
+        <div class="mode-b-badge">No vigente hasta el lanzamiento en la nube / Not in force until cloud launch</div>
+        <h2>9. Anexo MODO B: Tratamiento de Datos en la Nube</h2>
+        <p><em>Esta sección describe el tratamiento de datos personales previsto para el futuro MODO B (cuentas en la nube). Mientras la aplicación opere en MODO A, el operador no recibe ni almacena estos datos en servidores.</em></p>
+
+        <h3>9.1. Categorías de Datos Tratados en el MODO B</h3>
+        <ol>
+          <li><strong>Datos de cuenta e identificación:</strong> Nombre de usuario, nombre visible, dirección de correo electrónico y contraseña (almacenada mediante hash criptográfico en el servidor de autenticación).</li>
+          <li><strong>Datos relativos a la salud y hábitos (Datos Sensibles / Categorías Especiales):</strong> Sexo, edad, altura, peso, nivel de actividad física, objetivos nutricionales, registros diarios de alimentos y bebidas, consumo de agua y rachas.</li>
+          <li><strong>Datos de facturación (en planes de pago):</strong> Gestionados a través del proveedor de pagos <span class="pending">[PENDING payment provider]</span>. El operador solo recibe confirmación del estado de pago e identificadores de factura.</li>
+        </ol>
+
+        <h3>9.2. Finalidades del Tratamiento en el MODO B</h3>
+        <ol>
+          <li>Crear y gestionar tu cuenta en la nube y sincronizar tus registros entre tus dispositivos.</li>
+          <li>Calcular de forma orientativa tus necesidades de calorías y macronutrientes (fórmula Mifflin-St Jeor) y mostrar tu progreso.</li>
+          <li>Enviarte correos electrónicos estrictamente transaccionales (confirmación de cuenta, restablecimiento de contraseña, avisos de seguridad o cambios legales).</li>
+          <li>Gestionar el cobro y la facturación si contratas una suscripción de pago (<span class="pending">[PENDING]</span>).</li>
+          <li>Atender tus consultas de soporte y solicitudes de derechos de protección de datos.</li>
+        </ol>
+
+        <h3>9.3. Bases Jurídicas (España/UE - RGPD) y Autorización (Colombia - Ley 1581 de 2012)</h3>
+        <h4>A. Usuarios en España y la Unión Europea (RGPD (UE) 2016/679 <span class="verified">[VERIFIED]</span> y LOPDGDD LO 3/2018 <span class="verified">[VERIFIED]</span>)</h4>
+        <ul>
+          <li><strong>Datos de salud y nutrición (categorías especiales):</strong> Tu <strong>consentimiento explícito</strong> (artículo 9.2.a y artículo 6.1.a del RGPD <span class="verified">[VERIFIED]</span>), otorgado mediante una casilla específica y separada antes de sincronizar datos en la nube. Puedes retirar tu consentimiento en cualquier momento eliminando tu cuenta.</li>
+          <li><strong>Gestión de cuenta y sincronización (datos no sensibles):</strong> La <strong>ejecución del contrato</strong> de los Términos de Uso (artículo 6.1.b del RGPD <span class="verified">[VERIFIED]</span>).</li>
+          <li><strong>Facturación y obligaciones fiscales (en planes de pago):</strong> El <strong>cumplimiento de obligaciones legales</strong> aplicables al operador (artículo 6.1.c del RGPD <span class="verified">[VERIFIED]</span>).</li>
+          <li><strong>Seguridad técnica de la infraestructura web:</strong> El <strong>interés legítimo</strong> en mantener la seguridad técnica del servicio (artículo 6.1.f del RGPD <span class="verified">[VERIFIED]</span>). <em>(Nota: Las propuestas del paquete Digital Omnibus de la UE siguen en negociación y no se asumen vigentes).</em></li>
+        </ul>
+
+        <h4>B. Usuarios en Colombia (Ley Estatutaria 1581 de 2012 <span class="verified">[VERIFIED]</span> y Decreto 1074 de 2015 <span class="verified">[VERIFIED]</span>)</h4>
+        <ul>
+          <li><strong>Autorización previa, expresa e informada:</strong> Artículo 9 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>Regla especial sobre datos sensibles (salud):</strong> Conforme a los artículos 5 y 6 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span> y al Decreto 1377 de 2013 (compilado en el Decreto 1074 de 2015) <span class="verified">[VERIFIED]</span>, te informamos expresamente que <strong>por tratarse de datos sensibles relativos a tu salud y estado físico, NO estás obligado a autorizar su tratamiento</strong>, y ninguna actividad podrá condicionarse a que suministres datos sensibles que no sean estrictamente indispensables para la función que solicitas.</li>
+        </ul>
+
+        <h3>9.4. Destinatarios y Encargados del Tratamiento en el MODO B</h3>
+        <p>El operador no vende tus datos ni los comparte con redes publicitarias. Solo intervendrán como Encargados del Tratamiento bajo contrato:</p>
+        <ol>
+          <li><strong>GitHub, Inc. (GitHub Pages):</strong> Alojamiento del front-end estático (Estados Unidos).</li>
+          <li><strong>Supabase, Inc.:</strong> Base de datos Postgres y servicio de autenticación en la nube, configurado en la Unión Europea (<span class="pending">[PENDING]</span>).</li>
+          <li><strong>Proveedor de correo transaccional:</strong> <span class="pending">[PENDING]</span>.</li>
+          <li><strong>Pasarela de pagos:</strong> <span class="pending">[PENDING payment provider]</span>.</li>
+        </ol>
+
+        <h3>9.5. Transferencias Internacionales de Datos en el MODO B</h3>
+        <ul>
+          <li><strong>Desde España / Unión Europea:</strong> La base de datos de Supabase se alojará en la Unión Europea (<span class="pending">[PENDING]</span>). Cuando un proveedor implique acceso o transferencia fuera del Espacio Económico Europeo (por ejemplo, a Estados Unidos), se amparará en una decisión de adecuación (Marco de Privacidad de Datos UE-EE. UU., si aplica) o en las <strong>Cláusulas Contractuales Tipo (SCC)</strong> aprobadas por la Comisión Europea conforme al artículo 46 del RGPD <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>Desde Colombia:</strong> Cuando tus datos se almacenen o procesen fuera de Colombia (en la UE o EE. UU.), la transmisión o transferencia internacional se realizará conforme al artículo 26 de la Ley 1581 de 2012 <span class="verified">[VERIFIED]</span> y al Título V de la Circular Única de la SIC <span class="verified">[VERIFIED]</span>, mediante contratos de transmisión de datos y tu autorización expresa.</li>
+        </ul>
+
+        <h3>9.6. Almacenamiento Técnico de Sesión en el MODO B</h3>
+        <p>En el MODO B, al iniciar sesión en la nube (Supabase), tu navegador guardará además un token técnico de autenticación (en almacenamiento local o cookie técnica segura) únicamente para mantener abierta tu sesión conforme al artículo 22.2 de la LSSI-CE <span class="verified">[VERIFIED]</span>.</p>
+
+        <h3>9.7. Plazos de Conservación y Supresión en la Nube (MODO B)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoría de datos (MODO B)</th>
+                <th>Dónde se guarda</th>
+                <th>Plazo de conservación activa</th>
+                <th>Qué ocurre al eliminar la cuenta o vencer el plazo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Datos de cuenta y datos sensibles de salud/nutrición</strong></td>
+                <td>Base de datos Supabase (región UE <span class="pending">[PENDING]</span>)</td>
+                <td>Mientras tu cuenta esté activa. Si permanece inactiva durante <span class="pending">[PENDING: e.g. 24 months]</span>, te enviaremos un aviso previo por correo antes de borrarla por inactividad.</td>
+                <td><strong>Eliminación inmediata en producción</strong> al usar el botón "Eliminar cuenta" en la app (o en un máximo de <span class="pending">[PENDING: e.g. 7 days]</span> por correo). En copias de seguridad de recuperación ante desastres, los datos se sobrescriben automáticamente en un máximo de <span class="pending">[PENDING: e.g. 30 days]</span>.</td>
+              </tr>
+              <tr>
+                <td><strong>Correos de soporte y solicitudes de derechos (ARCO/RGPD)</strong></td>
+                <td>Buzón de soporte <span class="pending">[PENDING]</span></td>
+                <td>Durante la tramitación de la solicitud.</td>
+                <td>Una vez resuelta, se conservan bloqueados (art. 32 LOPDGDD en España <span class="verified">[VERIFIED]</span> y deberes de prueba bajo la Ley 1581 de 2012 en Colombia <span class="verified">[VERIFIED]</span>) durante el plazo de prescripción legal (<span class="pending">[PENDING: e.g. 3 years]</span>), tras lo cual se destruyen.</td>
+              </tr>
+              <tr>
+                <td><strong>Facturas y registros de pago (planes de pago)</strong></td>
+                <td>Sistema contable y <span class="pending">[PENDING payment provider]</span></td>
+                <td>Durante la vigencia de la suscripción.</td>
+                <td>Se conservan bloqueados (sin tus registros de salud) únicamente durante el plazo exigido por la ley fiscal y contable (<span class="pending">[PENDING: e.g. 5 to 6 years]</span>).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>9.8. Verificación de Identidad y Medidas de Seguridad en el MODO B</h3>
+        <ul>
+          <li><strong>Verificación de identidad:</strong> Cuando solicites por correo el acceso, portabilidad o supresión de una cuenta en la nube en el MODO B, enviaremos una confirmación al correo registrado en tu cuenta antes de revelar o borrar datos sensibles.</li>
+          <li><strong>Medidas de seguridad:</strong> En el MODO B se aplicarán cifrado en tránsito (TLS/HTTPS), contraseñas con hash criptográfico, seguridad a nivel de fila (Row Level Security - RLS) en la base de datos y control de accesos. Ningún sistema en Internet es invulnerable, por lo que te recomendamos usar una contraseña única y robusta.</li>
+        </ul>
+      </section>
+      <!-- MODE B -->
+    </section>
+
+    <!-- ==================== ENGLISH VERSION ==================== -->
+    <section lang="en" id="en" class="lang-section">
+      <h1>Privacy and Personal Data Processing Policy</h1>
+      <dl class="doc-meta">
+        <div><dt>Version (`PRIVACY_VERSION`):</dt><dd>0.2.0</dd></div>
+        <div><dt>Effective date:</dt><dd><span class="pending">[PENDING]</span></dd></div>
+        <div><dt>Last reviewed:</dt><dd>2026-10-17</dd></div>
+        <div><dt>Operating mode:</dt><dd>MODE A (Browser local storage only). Includes annex for MODE B at the end (not in force until cloud launch).</dd></div>
+        <div><dt>Status:</dt><dd>DRAFT: not legally reviewed</dd></div>
+      </dl>
+
+      <nav class="toc" aria-label="Table of contents">
+        <h2>Table of Contents</h2>
+        <ol>
+          <li><a href="#en-sec-1">1. Short Plain-Language Definitions</a></li>
+          <li><a href="#en-sec-2">2. Identity of the Data Controller</a></li>
+          <li><a href="#en-sec-3">3. How Privacy Works in MODE A (Current and Only Mode in Force)</a></li>
+          <li><a href="#en-sec-4">4. Local Technical Storage and Cookies Notice (MODE A)</a></li>
+          <li><a href="#en-sec-5">5. Data Retention and Deletion in MODE A</a></li>
+          <li><a href="#en-sec-6">6. Data Subject Rights (ARCO and GDPR) and How to Exercise Them</a></li>
+          <li><a href="#en-sec-7">7. Changes to This Policy and Prevailing Language</a></li>
+          <li><a href="#en-sec-8">8. Contact</a></li>
+          <li><a href="#en-sec-9">9. MODE B Annex: Cloud Data Processing</a></li>
+        </ol>
+      </nav>
+
+      <section id="en-sec-1" class="doc-section">
+        <h2>1. Short Plain-Language Definitions</h2>
+        <ul>
+          <li><strong>Personal data:</strong> Any information that can identify you (for example, your name, email address, or IP address).</li>
+          <li><strong>Sensitive or health-related data:</strong> Information about your physical status or health (such as your weight, height, age, sex, calorie goals, and food logs).</li>
+          <li><strong>Data Controller:</strong> The person or entity that decides why and how your personal data is processed.</li>
+          <li><strong>Data Processor:</strong> An external service provider that processes data on behalf of the Controller (for example, a hosting provider).</li>
+        </ul>
+      </section>
+
+      <section id="en-sec-2" class="doc-section">
+        <h2>2. Identity of the Data Controller</h2>
+        <ul>
+          <li><strong>Name or legal entity:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Legal form:</strong> <span class="pending">[PENDING: natural person / autonomo / SAS / SL ...]</span></li>
+          <li><strong>Tax ID (NIT / NIF):</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Postal address:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Country of establishment:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Privacy and support email:</strong> <span class="pending">[PENDING]</span></li>
+          <li><strong>Data Protection Officer (DPO):</strong> <span class="pending">[PENDING or "none appointed"]</span></li>
+        </ul>
+        <p class="note-text"><em>Note on Colombian legislative reforms: Statutory Reform Bills 214/2025 and 274/2025 <span class="verified">[VERIFIED]</span> currently before the Colombian Congress may introduce or modify requirements for a Data Protection Officer. This section will be updated if such reform enters into force.</em></p>
+      </section>
+
+      <section id="en-sec-3" class="doc-section">
+        <h2>3. How Privacy Works in MODE A (Current and Only Mode in Force)</h2>
+        <p>In <strong>MODE A</strong>, NutriLog runs locally inside your device's web browser:</p>
+        <ol>
+          <li><strong>The operator does NOT receive your data or credentials:</strong> Accounts and login exist only on the user's device; nothing is sent to the operator. All data you enter (login name, display name, sex, age, height, weight, activity level, goals, food and drink logs, water logs, and streaks) stays in your device's browser (<strong>IndexedDB</strong>).</li>
+          <li><strong>Passwords (PBKDF2 hash) and recovery code:</strong> Passwords are stored only as PBKDF2 hashes, and a recovery code is shown once upon account creation. Without the password or recovery code, nobody can recover the data.</li>
+          <li><strong>Local session controls:</strong> You may optionally enable "keep me signed in" for 30 days. The app features auto-lock after inactivity and lockout after 5 failed login attempts.</li>
+          <li><strong>No encryption at rest:</strong> Data in the browser is <strong>NOT encrypted at rest</strong>; local login only gates access on shared devices. You are responsible for protecting your device and avoiding public computers if you want to keep your data private.</li>
+          <li><strong>Static hosting logs (GitHub Pages):</strong> The static site is hosted on <strong>GitHub Pages</strong> (operated by GitHub, Inc., in the United States), which may log visitor <strong>IP addresses</strong> for technical and network security purposes. The NutriLog operator does not link those logs to your local activity.</li>
+        </ol>
+      </section>
+
+      <section id="en-sec-4" class="doc-section">
+        <h2>4. Local Technical Storage and Cookies Notice (MODE A)</h2>
+        <p>NutriLog <strong>does not use advertising cookies, analytics cookies, or third-party trackers</strong>. It uses only technical storage inside your own browser:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Technology</th>
+                <th>Type</th>
+                <th>Strictly Technical Purpose</th>
+                <th>Sent to Operator?</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>IndexedDB</strong></td>
+                <td>Browser local database</td>
+                <td>Stores your local profile, PBKDF2 password hash, goals, and food, drink, water, weight, and streak logs on your device.</td>
+                <td><strong>No.</strong> Stays only on your device.</td>
+                <td>Until you delete your account inside the app or clear your browser data.</td>
+              </tr>
+              <tr>
+                <td><strong>LocalStorage / SessionStorage</strong></td>
+                <td>Technical session storage</td>
+                <td>Manages the optional "keep me signed in" setting (up to 30 days), auto-lock, and the 5-failed-attempts lockout counter.</td>
+                <td><strong>No.</strong></td>
+                <td>30 days (if keep signed in is enabled) or until logout / clearing browser data.</td>
+              </tr>
+              <tr>
+                <td><strong>Service Worker and Cache Storage</strong></td>
+                <td>Technical file cache</td>
+                <td>Caches NutriLog's code, icons, and styles so the app works offline.</td>
+                <td><strong>No.</strong></td>
+                <td>Until you uninstall the PWA or clear your browser cache.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.1. Legal Exemption for Strictly Technical Storage</h3>
+        <ul>
+          <li><strong>In Spain and the European Union:</strong> Pursuant to <strong>Article 22.2 of Law 34/2002 (LSSI-CE)</strong> <span class="verified">[VERIFIED]</span> and the guidance of the Spanish Data Protection Agency (AEPD), this local storage is exempt from requiring a cookie consent banner because its sole purpose is to provide the local self-tracking service explicitly requested by the user. <em>(Maintenance note: If future EU Digital Omnibus reforms modify rules on accessing device storage, this section will be updated).</em></li>
+          <li><strong>In Colombia:</strong> Storage takes place solely on your own device to run the tool you requested, without collection on operator servers (Law 1581 of 2012 <span class="verified">[VERIFIED]</span> and Law 527 of 1999 <span class="verified">[VERIFIED]</span>).</li>
+        </ul>
+      </section>
+
+      <section id="en-sec-5" class="doc-section">
+        <h2>5. Data Retention and Deletion in MODE A</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data Category</th>
+                <th>Where It Is Stored</th>
+                <th>Retention and Rule on Soft-Deleted Records</th>
+                <th>How It Is Permanently Deleted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Local profile, credentials (PBKDF2 hash), and daily logs</strong></td>
+                <td>Your device's browser (<code>IndexedDB</code>)</td>
+                <td>Retained on your device for as long as you keep your local account. <strong>Important:</strong> Individually deleted records (soft-deleted records) stay on the device until the account is deleted.</td>
+                <td><strong>Immediate and irreversible:</strong> By using the <strong>"Delete account"</strong> option inside the app (which wipes all local data, including soft-deleted records) or by clearing site data in your browser.</td>
+              </tr>
+              <tr>
+                <td><strong>Hosting technical network logs (IP)</strong></td>
+                <td>GitHub Pages servers (GitHub, Inc.)</td>
+                <td>According to GitHub, Inc.'s technical security policies.</td>
+                <td>Automatically managed by GitHub, Inc.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="en-sec-6" class="doc-section">
+        <h2>6. Data Subject Rights (ARCO and GDPR) and How to Exercise Them</h2>
+
+        <h3>6.1. Direct Exercise Inside the Application (MODE A)</h3>
+        <p>Because the operator does not receive or store your data in MODE A, you can exercise your rights directly and immediately inside NutriLog:</p>
+        <ol>
+          <li><strong>Export all your data (Access and Portability):</strong> Export all your data as <strong>JSON</strong> inside the app.</li>
+          <li><strong>Edit data and change password (Rectification and Updating):</strong> Edit any profile field or daily log and change your password inside the app.</li>
+          <li><strong>Delete your account (Erasure / Cancellation):</strong> Delete your account inside the app to wipe all your local data completely (including soft-deleted records).</li>
+        </ol>
+
+        <h3>6.2. Summary Table of Legal Rights by Country</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Right</th>
+                <th>What It Means</th>
+                <th>Colombia (Law 1581 of 2012 <span class="verified">[VERIFIED]</span>)</th>
+                <th>Spain / EU (GDPR <span class="verified">[VERIFIED]</span> and LOPDGDD <span class="verified">[VERIFIED]</span>)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Access / Know</strong></td>
+                <td>Know what data of yours is processed and obtain a copy of it.</td>
+                <td>Art. 8.a and Art. 14 (Inquiries / Consultas) <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 15 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Rectification / Updating</strong></td>
+                <td>Correct inaccurate, incomplete, or outdated data.</td>
+                <td>Art. 8.a and Art. 15 (Claims / Reclamos) <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 16 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Erasure / Deletion</strong></td>
+                <td>Request the deletion of your personal data.</td>
+                <td>Art. 8.e and Art. 15 <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 17 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Revocation / Withdraw Consent</strong></td>
+                <td>Withdraw authorization or consent given.</td>
+                <td>Art. 8.e and Art. 9 <span class="verified">[VERIFIED]</span></td>
+                <td>Art. 7.3 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Data Portability</strong></td>
+                <td>Receive your data in a structured, machine-readable format (JSON).</td>
+                <td>Available via in-app JSON export</td>
+                <td>Art. 20 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Restriction of Processing</strong></td>
+                <td>Request temporary suspension of data use in specific legal cases.</td>
+                <td>N/A ("claim in progress" notice applies under Art. 15.2 <span class="verified">[VERIFIED]</span>)</td>
+                <td>Art. 18 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+              <tr>
+                <td><strong>Object</strong></td>
+                <td>Object to processing based on legitimate interest.</td>
+                <td>May revoke authorization / file claim</td>
+                <td>Art. 21 GDPR <span class="verified">[VERIFIED]</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>6.3. Email Procedure and Statutory Response Deadlines</h3>
+        <p>To make an inquiry or exercise your rights in writing (especially regarding support emails or once MODE B enters into force), write to <span class="pending">[PENDING]</span> stating your name, your request, and, if acting on behalf of another person, proof of authority.</p>
+
+        <h4>A. Statutory Deadlines in Colombia (Law 1581 of 2012 <span class="verified">[VERIFIED]</span>)</h4>
+        <ol>
+          <li><strong>Inquiries / Consultas (Article 14 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span>):</strong> Answered within a maximum of <strong>ten (10) business days</strong> from the date of receipt. If it cannot be answered within that term, we will inform you before expiration of the reasons for the delay and the new response date, which shall not exceed <strong>five (5) business days</strong> following expiration of the first period.</li>
+          <li><strong>Claims / Reclamos for correction, updating, deletion, or revocation (Article 15 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span>):</strong>
+            <ul>
+              <li><strong>Incomplete claim:</strong> We will ask you within <strong>five (5) business days</strong> of receipt to remedy the omissions. If <strong>two (2) months</strong> pass without you providing the requested information, you will be deemed to have withdrawn the claim.</li>
+              <li><strong>Database notice:</strong> Once a complete claim is received (in MODE B), a <em>"claim in progress"</em> (<em>"reclamo en trámite"</em>) label will be added within <strong>two (2) business days</strong>.</li>
+              <li><strong>Response deadline:</strong> Maximum of <strong>fifteen (15) business days</strong> counted from the day after receipt. If it cannot be answered within that term, we will inform you of the reasons and the new date, which in no case may exceed <strong>eight (8) business days</strong> following expiration of the first period.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4>B. Statutory Deadlines in Spain and the European Union (GDPR, Articles 12.3 and 12.5 <span class="verified">[VERIFIED]</span>)</h4>
+        <p>We will respond without undue delay and in any event within <strong>one (1) month</strong> of receipt of the request. This period may be extended by up to <strong>two (2) further months</strong> where necessary depending on complexity and number of requests, informing you of the extension and reasons within the first month. Exercising rights is free of charge (Art. 12.5 GDPR <span class="verified">[VERIFIED]</span>).</p>
+
+        <h3>6.4. Supervisory Authorities for Complaints</h3>
+        <ul>
+          <li><strong>In Colombia:</strong> <strong>Superintendence of Industry and Commerce (SIC)</strong> (www.sic.gov.co), after exhausting the direct inquiry or claim procedure with the operator pursuant to Article 16 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>In Spain / EU:</strong> <strong>Spanish Data Protection Agency (AEPD)</strong> (www.aepd.es) or the data protection authority of your EU country of residence.</li>
+        </ul>
+      </section>
+
+      <section id="en-sec-7" class="doc-section">
+        <h2>7. Changes to This Policy and Prevailing Language</h2>
+        <p>Any update to this Policy will be published inside the app indicating the new version number (<code>PRIVACY_VERSION</code>) and review date. <strong>The Spanish text is the reference version and shall prevail if the versions differ.</strong></p>
+      </section>
+
+      <section id="en-sec-8" class="doc-section">
+        <h2>8. Contact</h2>
+        <p>For any question or request regarding privacy and data protection, please write to: <span class="pending">[PENDING]</span>.</p>
+      </section>
+
+      <!-- MODE B -->
+      <section id="en-sec-9" class="doc-section mode-b-box" aria-label="Mode B Annex">
+        <div class="mode-b-badge">No vigente hasta el lanzamiento en la nube / Not in force until cloud launch</div>
+        <h2>9. MODE B Annex: Cloud Data Processing</h2>
+        <p><em>This section describes personal data processing planned for future MODE B (cloud accounts). While the app operates in MODE A, the operator does not receive or store this data on servers.</em></p>
+
+        <h3>9.1. Categories of Data Processed in MODE B</h3>
+        <ol>
+          <li><strong>Account and identification data:</strong> Login name, display name, email address, and password (stored as a cryptographic hash on the authentication server).</li>
+          <li><strong>Health-related and habit data (Sensitive Data / Special Categories):</strong> Sex, age, height, weight, physical activity level, nutritional goals, daily food and drink logs, water intake logs, and streaks.</li>
+          <li><strong>Billing data (on paid plans):</strong> Managed through the payment processor <span class="pending">[PENDING payment provider]</span>. The operator receives only payment status confirmation and invoice identifiers.</li>
+        </ol>
+
+        <h3>9.2. Purposes of Processing in MODE B</h3>
+        <ol>
+          <li>Creating and managing your cloud account and synchronizing your logs across your devices.</li>
+          <li>Calculating your estimated calorie and macronutrient needs (Mifflin-St Jeor formula) and displaying your progress.</li>
+          <li>Sending strictly transactional emails (account confirmation, password reset, security notices, or legal updates).</li>
+          <li>Managing billing and invoicing if you subscribe to a paid plan (<span class="pending">[PENDING]</span>).</li>
+          <li>Responding to your support inquiries and data protection rights requests.</li>
+        </ol>
+
+        <h3>9.3. Legal Bases (Spain/EU - GDPR) and Authorization (Colombia - Law 1581 of 2012)</h3>
+        <h4>A. Users in Spain and the European Union (GDPR (EU) 2016/679 <span class="verified">[VERIFIED]</span> and LOPDGDD Organic Law 3/2018 <span class="verified">[VERIFIED]</span>)</h4>
+        <ul>
+          <li><strong>Health and nutrition data (special categories):</strong> Your <strong>explicit consent</strong> (Article 9.2.a and Article 6.1.a GDPR <span class="verified">[VERIFIED]</span>), given via a specific, separate checkbox before syncing data to the cloud. You may withdraw your consent at any time by deleting your account.</li>
+          <li><strong>Account management and synchronization (non-sensitive data):</strong> <strong>Performance of the contract</strong> under the Terms of Use (Article 6.1.b GDPR <span class="verified">[VERIFIED]</span>).</li>
+          <li><strong>Billing and tax obligations (on paid plans):</strong> <strong>Compliance with legal obligations</strong> applicable to the operator (Article 6.1.c GDPR <span class="verified">[VERIFIED]</span>).</li>
+          <li><strong>Technical security of web infrastructure:</strong> <strong>Legitimate interest</strong> in maintaining the technical security of the service (Article 6.1.f GDPR <span class="verified">[VERIFIED]</span>). <em>(Note: Proposed EU Digital Omnibus changes remain under negotiation and are not assumed to apply).</em></li>
+        </ul>
+
+        <h4>B. Users in Colombia (Statutory Law 1581 of 2012 <span class="verified">[VERIFIED]</span> and Decree 1074 of 2015 <span class="verified">[VERIFIED]</span>)</h4>
+        <ul>
+          <li><strong>Prior, express, and informed authorization:</strong> Article 9 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>Special rule for sensitive data (health):</strong> Pursuant to Articles 5 and 6 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span> and Decree 1377 of 2013 (compiled in Decree 1074 of 2015) <span class="verified">[VERIFIED]</span>, we expressly inform you that <strong>because this involves sensitive data relating to your health and physical status, you are NOT required to authorize its processing</strong>, and no activity may be conditioned on providing sensitive data that is not strictly necessary for the function you request.</li>
+        </ul>
+
+        <h3>9.4. Recipients and Data Processors in MODE B</h3>
+        <p>The operator does not sell your data or share it with advertising networks. Only the following Data Processors will act under contract:</p>
+        <ol>
+          <li><strong>GitHub, Inc. (GitHub Pages):</strong> Static front-end hosting (United States).</li>
+          <li><strong>Supabase, Inc.:</strong> Postgres database and cloud authentication service, configured in the European Union (<span class="pending">[PENDING]</span>).</li>
+          <li><strong>Transactional email provider:</strong> <span class="pending">[PENDING]</span>.</li>
+          <li><strong>Payment gateway:</strong> <span class="pending">[PENDING payment provider]</span>.</li>
+        </ol>
+
+        <h3>9.5. International Data Transfers in MODE B</h3>
+        <ul>
+          <li><strong>From Spain / European Union:</strong> The Supabase database will be hosted in the European Union (<span class="pending">[PENDING]</span>). Where a provider involves access or transfer outside the European Economic Area (for example, to the United States), it will be safeguarded by an adequacy decision (EU-US Data Privacy Framework, where applicable) or by <strong>Standard Contractual Clauses (SCCs)</strong> approved by the European Commission under Article 46 GDPR <span class="verified">[VERIFIED]</span>.</li>
+          <li><strong>From Colombia:</strong> When your data is stored or processed outside Colombia (in the EU or US), international transmission or transfer will take place in accordance with Article 26 of Law 1581 of 2012 <span class="verified">[VERIFIED]</span> and Title V of the SIC Basic Circular (<em>Circular Única</em>) <span class="verified">[VERIFIED]</span>, supported by data transmission contracts and your express authorization.</li>
+        </ul>
+
+        <h3>9.6. Cloud Session Technical Storage in MODE B</h3>
+        <p>In MODE B, when you sign in to the cloud (Supabase), your browser will also store a technical authentication token (in local storage or a secure technical cookie) solely to keep your session open pursuant to Article 22.2 LSSI-CE <span class="verified">[VERIFIED]</span>.</p>
+
+        <h3>9.7. Cloud Retention and Deletion Periods (MODE B)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data Category (MODE B)</th>
+                <th>Where It Is Stored</th>
+                <th>Active Retention Period</th>
+                <th>What Happens Upon Account Deletion or Expiration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Account data and sensitive health/nutrition data</strong></td>
+                <td>Supabase database (EU region <span class="pending">[PENDING]</span>)</td>
+                <td>While your account is active. If inactive for <span class="pending">[PENDING: e.g. 24 months]</span>, we will send a prior email notice before deleting it for inactivity.</td>
+                <td><strong>Immediate deletion in production</strong> when using the in-app "Delete account" button (or within a maximum of <span class="pending">[PENDING: e.g. 7 days]</span> by email). In disaster-recovery backups, data is automatically overwritten within a maximum of <span class="pending">[PENDING: e.g. 30 days]</span>.</td>
+              </tr>
+              <tr>
+                <td><strong>Support emails and rights requests (ARCO/GDPR)</strong></td>
+                <td>Support inbox <span class="pending">[PENDING]</span></td>
+                <td>During handling of the request.</td>
+                <td>Once resolved, retained in a blocked/restricted state (Art. 32 LOPDGDD in Spain <span class="verified">[VERIFIED]</span> and evidentiary duties under Law 1581 of 2012 in Colombia <span class="verified">[VERIFIED]</span>) for the statutory limitation period (<span class="pending">[PENDING: e.g. 3 years]</span>), after which they are destroyed.</td>
+              </tr>
+              <tr>
+                <td><strong>Invoices and payment records (paid plans)</strong></td>
+                <td>Accounting system and <span class="pending">[PENDING payment provider]</span></td>
+                <td>During the subscription term.</td>
+                <td>Retained in a blocked/restricted state (without your health logs) solely for the period required by tax and accounting law (<span class="pending">[PENDING: e.g. 5 to 6 years]</span>).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>9.8. Identity Verification and Security Measures in MODE B</h3>
+        <ul>
+          <li><strong>Identity verification:</strong> When you request access, portability, or deletion of a cloud account in MODE B by email, we will send a confirmation to the email address registered on your account before disclosing or deleting sensitive data.</li>
+          <li><strong>Security measures:</strong> In MODE B, encryption in transit (TLS/HTTPS), cryptographic password hashing, database Row Level Security (RLS), and access controls will be applied. No internet system is invulnerable, so we recommend using a unique and strong password.</li>
+        </ul>
+      </section>
+      <!-- MODE B -->
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <span class="i18n-es">Contacto de soporte y privacidad:</span>
+      <span class="i18n-en">Support and privacy contact:</span>
+      <span class="pending">[PENDING]</span>
+    </p>
+    <nav class="footer-links" aria-label="Documentos legales / Legal documents">
+      <a href="terms.html">
+        <span class="i18n-es">Términos de Uso</span>
+        <span class="i18n-en">Terms of Use</span>
+      </a>
+      <a href="privacy.html">
+        <span class="i18n-es">Política de Privacidad</span>
+        <span class="i18n-en">Privacy Policy</span>
+      </a>
+      <a href="health-disclaimer.html">
+        <span class="i18n-es">Aviso de Salud</span>
+        <span class="i18n-en">Health Disclaimer</span>
+      </a>
+    </nav>
+  </footer>
+</body>
+</html>

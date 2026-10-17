@@ -1,15 +1,21 @@
-const CACHE_NAME = 'nutrilog-cache-v1';
+const CACHE_NAME = 'nutrilog-cache-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
   './vendor/dexie.min.js',
+  './js/config.js',
   './js/db.js',
   './js/calc.js',
   './js/seed.js',
   './js/ui.js',
   './js/app.js',
+  './js/auth/authProvider.js',
+  './js/auth/localAuth.js',
+  './legal/terms.html',
+  './legal/privacy.html',
+  './legal/health-disclaimer.html',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
@@ -21,7 +27,7 @@ self.addEventListener('install', (event) => {
         try {
           await cache.add(asset);
         } catch (_err) {
-          // Optional icons may not exist during initial setup
+          // Optional assets skipped if absent
         }
       }
     })

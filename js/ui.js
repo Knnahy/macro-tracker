@@ -27,6 +27,18 @@ export function hideBanner() {
   if (banner) banner.classList.add('hidden');
 }
 
+export function showAuthError(message) {
+  const box = document.getElementById('auth-error-box');
+  if (!box) return;
+  if (!message) {
+    box.textContent = '';
+    box.classList.add('hidden');
+    return;
+  }
+  box.textContent = message;
+  box.classList.remove('hidden');
+}
+
 export function renderMacroProgressBar(label, current, target, unit) {
   const safeTarget = Number(target) > 0 ? Number(target) : 0;
   const pct = safeTarget > 0 ? Math.min(100, Math.max(0, (current / safeTarget) * 100)) : 0;
@@ -40,9 +52,7 @@ export function renderMacroProgressBar(label, current, target, unit) {
         <strong>${escapeHtml(label)}</strong>
         <span class="mono-text">${fmt(current, 1)} / ${fmt(safeTarget, 0)}${escapeHtml(unit)} (${escapeHtml(remLabel)})</span>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill ${isOver ? 'over' : ''}" style="width:${fmt(pct, 1)}%"></div>
-      </div>
+      <progress class="progress-native ${isOver ? 'over' : ''}" value="${fmt(pct, 1)}" max="100"></progress>
     </div>
   `;
 }
@@ -54,7 +64,7 @@ export function renderTodaySummary(totals, targets) {
   if (!targets) {
     container.innerHTML = `
       <h2 class="section-title">Daily Progress</h2>
-      <p class="meta-text">Profile incomplete. Open the <strong>Profile</strong> tab to configure your biometrics and calculate daily calorie and macronutrient targets.</p>
+      <p class="meta-text">Biometric profile incomplete. Open the <strong>Profile</strong> tab to configure your biometrics and calculate daily calorie and macronutrient targets.</p>
       <div class="mt-sm mono-text">
         Logged today: ${fmt(totals.kcal, 0)} kcal | P ${fmt(totals.protein, 1)}g | C ${fmt(totals.carbs, 1)}g | F ${fmt(totals.fat, 1)}g | Fiber ${fmt(totals.fiber, 1)}g
       </div>
@@ -98,8 +108,8 @@ export function renderTodayLogs(logs) {
             </div>
           </div>
           <div class="list-item-actions">
-            <button type="button" class="btn btn-sm" data-action="edit-log" data-id="${Number(entry.id)}" data-grams="${Number(entry.grams)}">Edit g</button>
-            <button type="button" class="btn btn-sm" data-action="delete-log" data-id="${Number(entry.id)}">Del</button>
+            <button type="button" class="btn btn-sm" data-action="edit-log" data-id="${escapeHtml(entry.id)}" data-grams="${Number(entry.grams)}">Edit g</button>
+            <button type="button" class="btn btn-sm" data-action="delete-log" data-id="${escapeHtml(entry.id)}">Del</button>
           </div>
         </div>
       `;
@@ -119,7 +129,7 @@ export function renderWaterSection(waterLogs, targets) {
   }
   if (bar) {
     const pct = targetMl > 0 ? Math.min(100, (totalMl / targetMl) * 100) : 0;
-    bar.style.width = `${fmt(pct, 1)}%`;
+    bar.value = Number(fmt(pct, 1));
   }
   if (!list) return;
 
@@ -137,7 +147,7 @@ export function renderWaterSection(waterLogs, targets) {
           <div class="list-item-sub mono-text">${fmt(w.ml, 0)} ml (${escapeHtml(w.type)})</div>
         </div>
         <div class="list-item-actions">
-          <button type="button" class="btn btn-sm" data-action="delete-water" data-id="${Number(w.id)}">Del</button>
+          <button type="button" class="btn btn-sm" data-action="delete-water" data-id="${escapeHtml(w.id)}">Del</button>
         </div>
       </div>
     `
@@ -172,8 +182,8 @@ export function renderFoodsList(foods, currency = '€') {
             </div>
           </div>
           <div class="list-item-actions">
-            <button type="button" class="btn btn-sm" data-action="edit-food" data-id="${Number(f.id)}">Edit</button>
-            <button type="button" class="btn btn-sm" data-action="delete-food" data-id="${Number(f.id)}">Del</button>
+            <button type="button" class="btn btn-sm" data-action="edit-food" data-id="${escapeHtml(f.id)}">Edit</button>
+            <button type="button" class="btn btn-sm" data-action="delete-food" data-id="${escapeHtml(f.id)}">Del</button>
           </div>
         </div>
       `;
