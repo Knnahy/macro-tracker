@@ -1,150 +1,317 @@
 # Path: README.md
-# NutriLog — Personal Nutrition & Macro Tracker (PWA)
-- **Version:** 0.1.0
-- **Effective date:** [PENDING]
-- **Last reviewed:** 2026-10-17
-- **Operating mode:** MODE A (Local-Only Browser Storage in Force). Includes planned architecture for MODE B (not in force until cloud launch).
-- **Status:** DRAFT: not legally reviewed
+# NutriLog (README v2)
+
+Personal macro, calorie, and daily nutrition tracker running as an offline-capable Progressive Web Application (PWA).
+
+- **Live App:** [https://knnahy.github.io/macro-tracker/](https://knnahy.github.io/macro-tracker/)
+- **Status:** `v0.2.0, local-only, personal project`
+
+---
 
 ## 1. Overview
-**NutriLog** is an offline-first Progressive Web Application (PWA) for adults (18+) in Colombia and Spain/EU to log daily meals, drinks, water intake, body weight, and physical activity, and to calculate estimated daily calorie and macronutrient targets using the **Mifflin-St Jeor** equation.
 
-- **Wellness & Educational Boundary:** NutriLog is a general self-tracking and educational tool. It is **not** a medical device, does **not** diagnose or treat medical conditions, and does **not** provide individualized clinical dietary prescriptions.
-- **Current Operating Mode (MODE A — Local-Only):** All user data stays 100% inside the user's browser (`IndexedDB`). There is no backend server, no analytics, no advertising, and no third-party tracking. Static files are hosted on GitHub Pages.
+NutriLog is a browser-based nutrition and macronutrient tracker for adults (18+). In **v0.2.0 (Mode A — Local-Only)**, all accounts, passwords, settings, foods, dishes, and daily logs stay inside your device's browser (`IndexedDB`). There is no backend server, no cloud database, no analytics, and no advertising.
 
-## 2. Key Features (v0.1.0 — MODE A)
-- **Local Profile & Privacy Gate:** Create a local profile (login name, display name, sex, age, height, weight, activity level, goals). *Note: Local login is an on-screen privacy gate, NOT encryption at rest.*
-- **Mifflin-St Jeor Calculator & Safety Warnings:** Calculates estimated Basal Metabolic Rate (BMR), Total Daily Energy Expenditure (TDEE), and macro splits, displaying mandatory health warnings whenever a target falls below **1200 kcal/day (women)** or **1500 kcal/day (men)**.
-- **Daily Logging:** Log food and drinks (using approximate seed data or custom entries), water intake, weight history, and daily logging streaks.
-- **Offline-First PWA:** Service Worker caches static assets for offline reliability.
-- **Built-In Data Rights (Export & Delete):** One-click full data export (`JSON`/`CSV`) and immediate, irreversible local account/data deletion inside the app.
+NutriLog provides general educational information and mathematical estimates only. It is not a medical device and does not provide medical advice or individualized dietary prescriptions.
 
-## 3. Architecture & Stack
-- **Frontend Stack:** HTML5, CSS3, TypeScript / Vanilla ES Modules (or lightweight UI framework `[PENDING]`), Web App Manifest, Service Worker API.
-- **Storage (MODE A — In Force):** Browser `IndexedDB` for structured user data; `Cache Storage` for static PWA assets.
-- **Hosting:** GitHub Pages (static bundle deployment over HTTPS).
-<!-- MODE B -->
-- **Planned Cloud Stack (MODE B — NOT IN FORCE UNTIL CLOUD LAUNCH):** Supabase (Postgres database + Supabase Auth in EU region `[PENDING]`), transactional email via `[PENDING]`, and subscription payments via `[PENDING payment provider]`.
-<!-- MODE B -->
+---
 
-## 4. Repository Folder Structure
+## 2. Features (v0.2.0)
+
+Only features that exist in the current build are listed below:
+
+- **Macro and Calorie Targets (Mifflin-St Jeor):** Calculates estimated Basal Metabolic Rate (BMR), Total Daily Energy Expenditure (TDEE), and daily calorie/macronutrient targets, with automatic safety warnings if a target falls below 1200 kcal (women) or 1500 kcal (men).
+- **Foods Database (CRUD + Import/Export):** Create, view, edit, and soft-delete custom foods alongside default seed foods, plus import and export food catalogs as JSON.
+- **Dishes Builder:** Combine multiple foods and ingredient weights into reusable multi-ingredient dishes/recipes with automatic macro summation.
+- **Daily Log:** Log food and dish portions by meal and date, storing self-contained nutritional snapshots so historical logs do not break if a food item is edited later.
+- **Water and Drinks Tracking:** Log daily water intake and beverage entries toward daily hydration goals.
+- **Streaks:** Tracks consecutive daily logging streaks.
+- **Local Accounts with Login:** Multiple isolated local accounts on the same browser, protected by a local login screen and PBKDF2 password hashing.
+- **Auto-Lock and Lockout:** Automatic session lock after inactivity, optional 30-day "keep me signed in" setting, and temporary lockout after 5 failed login attempts.
+- **One-Time Recovery Code:** Generates a single-use recovery code at sign-up (and upon rotation) to reset a forgotten local password.
+- **Full JSON Export:** One-click export of all account data (`profile`, `foods`, `dishes`, `daily logs`, `water logs`, `streaks`) as a structured JSON file.
+- **Delete Account:** Permanently deletes the active local account and wipes its dedicated per-account `IndexedDB` database (including all soft-deleted records).
+- **Offline PWA:** Installable web app with a Service Worker that caches application assets for offline use.
+- **Bilingual Legal Pages (Draft):** Built-in Spanish and English draft legal pages (`legal/terms.html`, `legal/privacy.html`, `legal/health-disclaimer.html`) with an offline CSS language switch.
+
+---
+
+## 3. Stack and Architecture
+
+- **Markup & Styling:** Semantic HTML5 and responsive CSS3 (dark/light mode via `prefers-color-scheme`, no external fonts or CSS frameworks).
+- **Scripting:** Vanilla JavaScript (ES Modules), zero build step or bundler required.
+- **Database Engine:** [Dexie.js](https://dexie.org/) loaded locally as a global script from `/vendor` wrapping browser `IndexedDB`.
+- **Offline Layer:** Native Service Worker API and Web App Manifest.
+
+### Module Diagram
+
 ```text
-nutrilog/
-├── README.md                  # Developer documentation & privacy-by-design rules
-├── SECURITY.md                # Vulnerability reporting policy & security scope
-├── CHANGELOG.md               # Release history (v0.1.0 released; v0.2.0 planned)
-├── src/                       # Application source code (UI, Mifflin-St Jeor math, IndexedDB layer)
-├── public/                    # Static assets, manifest.json, service-worker.js, seed food data
-├── tests/                     # Unit and acceptance test suites
-├── legal/
-│   ├── es/                    # Spanish user-facing legal documents (8 files)
-│   └── en/                    # English user-facing legal documents (8 files)
-└── docs/
-    └── internal/              # Internal compliance docs (ROPA, Breach Plan, DPIA, Maintenance)
+                    +-------------------+
+                    |    index.html     |
+                    +---------+---------+
+                              |
+              +---------------+---------------+
+              |                               |
+              v                               v
+    +-------------------+           +-------------------+
+    | /vendor/dexie.js  |           |      app.js       |
+    |  (Global Dexie)   |           | (Bootstrap & Flow)|
+    +---------+---------+           +---------+---------+
+              |                               |
+              |        +----------------------+----------------------+
+              |        |                      |                      |
+              |        v                      v                      v
+              |  +-----------+          +-----------+          +-----------+
+              |  | config.js |          |   ui.js   |          |  calc.js  |
+              |  | (Versions |          | (DOM, Esc |          | (Pure Math|
+              |  | & Consts) |          | & Events) |          | No DOM/DB)|
+              |  +-----------+          +-----+-----+          +-----------+
+              |                               |
+              +---------------+---------------+
+                              |
+              +---------------+---------------+
+              |                               |
+              v                               v
+    +-------------------+           +-------------------+
+    |   Auth Provider   |           |       db.js       |
+    |     Interface     |           | (Dexie Schemas,   |
+    | (Local PBKDF2 ->  |           |  CRUD, Snapshots  |
+    |  Future Supabase) |           |  & v0.1 Migration)|
+    +---------+---------+           +---------+---------+
+              |                               |
+              v                               v
+    [ IndexedDB: nutrilog-auth ]    [ IndexedDB: nutrilog-data-<accountId> ]
 ```
 
-## 5. Setup Instructions (Windows & macOS)
+- **`config.js`:** Holds `APP_VERSION`, `TERMS_VERSION`, `PRIVACY_VERSION`, lockout thresholds, calorie floor constants, and default configuration.
+- **`calc.js`:** Pure mathematical functions (Mifflin-St Jeor BMR/TDEE, macro calories, gram scaling, streak calculations). Contains zero DOM and zero database code.
+- **`db.js`:** Manages the per-account Dexie database (`nutrilog-data-<accountId>`), schema versioning, soft-delete filtering, JSON import/export, and legacy v0.1 migration.
+- **Auth Provider Interface (`auth.js` / auth module):** Abstracts account creation, login, logout, password change, recovery code reset, inactivity auto-lock, and 5-attempt lockout against `nutrilog-auth`. Designed so a future cloud provider (Supabase) can plug into the same interface.
+- **`ui.js`:** Renders views, escapes user strings before DOM insertion, binds event listeners (no inline HTML handlers), and manages forms and modals.
+- **`app.js`:** Application entry point; coordinates auth state, database initialization, Service Worker registration, and UI rendering.
 
-### Prerequisites
-- **Node.js:** v20 LTS or higher (`node -v`)
-- **npm:** v10 or higher (`npm -v`)
-- **Git:** v2.40 or higher
+---
 
-### Setup on macOS
+## 4. Folder Tree
+
+```text
+macro-tracker/
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── README.md
+├── CHANGELOG.md
+├── SECURITY.md
+├── css/
+│   └── styles.css
+├── js/
+│   ├── app.js
+│   ├── auth.js
+│   ├── calc.js
+│   ├── config.js
+│   ├── db.js
+│   └── ui.js
+├── vendor/
+│   └── dexie.min.js
+└── legal/
+    ├── terms.html
+    ├── privacy.html
+    ├── health-disclaimer.html
+    ├── legal.css
+    ├── es/
+    │   └── consent-texts.md
+    └── en/
+        └── consent-texts.md
+```
+
+*(Note: If your local working tree places `.js` or `.css` files at the root instead of `/js` and `/css`, keep relative imports matching the root layout. Internal compliance drafts are stored privately outside the Git repository and are never committed).*
+
+---
+
+## 5. Data Model
+
+NutriLog separates authentication metadata from nutrition data using two browser `IndexedDB` database namespaces via Dexie:
+
+### 5.1. Global Auth Database: `nutrilog-auth`
+Stores local account records and active session state across the browser:
+- **`accounts`:** `id` (UUID), `username` (normalized login name), `displayName`, `passwordHash` (PBKDF2), `passwordSalt`, `recoveryHash` (PBKDF2), `recoverySalt`, `failedAttempts`, `lockoutUntil`, `termsVersion`, `privacyVersion`, `consentAt`, `createdAt`, `updatedAt`, `deleted`.
+- **`sessions`:** `id`, `accountId`, `createdAt`, `expiresAt` (supports optional 30-day "keep me signed in"), `lastActiveAt` (for inactivity auto-lock).
+
+### 5.2. Per-Account Data Database: `nutrilog-data-<accountId>`
+Each local account gets its own isolated Dexie database named `nutrilog-data-<accountId>`:
+- **`profile` / `settings`:** `id`, `sex`, `age`, `heightCm`, `weightKg`, `activityLevel`, `goalType`, `targetKcal`, `proteinRatio`, `carbsRatio`, `fatRatio`, `waterGoalMl`, `lastBackupPromptAt`, `createdAt`, `updatedAt`, `deleted`.
+- **`foods`:** `id` (UUID), `name`, `brand`, `kcalPer100g`, `proteinPer100g`, `carbsPer100g`, `fatPer100g`, `defaultGrams`, `isSeed`, `createdAt`, `updatedAt`, `deleted`.
+- **`dishes`:** `id` (UUID), `name`, `items` (array of `{ foodId, nameSnapshot, grams, kcal, protein, carbs, fat }`), `totalGrams`, `totalKcal`, `totalProtein`, `totalCarbs`, `totalFat`, `createdAt`, `updatedAt`, `deleted`.
+- **`logs` (daily food & drink entries):** `id` (UUID), `date` (`YYYY-MM-DD`), `mealType`, `sourceType` (`food` | `dish` | `quick`), `sourceId`, `grams`, `snapshot` (`{ name, kcal, protein, carbs, fat }`), `createdAt`, `updatedAt`, `deleted`.
+- **`waterLogs`:** `id` (UUID), `date` (`YYYY-MM-DD`), `amountMl`, `beverageName`, `createdAt`, `updatedAt`, `deleted`.
+- **`streaks`:** `id`, `currentStreak`, `longestStreak`, `lastLoggedDate`, `updatedAt`, `deleted`.
+
+### 5.3. Record Conventions
+- **UUIDs:** Every entity uses a UUID (`crypto.randomUUID()`) as its primary key to avoid collisions during JSON imports and future sync.
+- **Audit & Sync Metadata:** Every record includes `createdAt` (ISO timestamp), `updatedAt` (ISO timestamp), and `deleted` (`boolean` / timestamp flag).
+- **Soft Deletes:** Deleting a food, dish, or log entry in the UI sets `deleted = true` and updates `updatedAt`. Soft-deleted records are hidden from active UI queries but remain on the device until the user deletes their account (which drops `nutrilog-data-<accountId>`).
+- **Snapshots in Log Entries:** Daily log entries store a frozen copy (`snapshot`) of the item's name, calories, and macros at the moment of logging. Editing or soft-deleting a food in the catalog never corrupts past daily totals.
+- **Schema Versions & Migrations:** Dexie `db.version(N).stores({...}).upgrade(tx => ...)` manages non-destructive schema upgrades when fields or indexes are added.
+
+---
+
+## 6. Accounts and Security Design
+
+### What Is Stored
+- **PBKDF2 Password Hashing:** Passwords are never stored in plain text. They are hashed in the browser using the Web Crypto API (`PBKDF2` with SHA-256 and a random per-user salt).
+- **One-Time Recovery Code:** On account creation, a high-entropy recovery code is generated and displayed **once** to the user. Only its PBKDF2 hash and salt are stored in `nutrilog-auth`. If the user forgets their password, the recovery code verifies identity, lets them set a new password, and rotates the recovery code. **Without the password or the recovery code, nobody (including the developer) can recover the account.**
+- **Lockout & Auto-Lock:**
+  - **5 Failed Attempts:** After 5 consecutive failed password attempts, the account is temporarily locked (`lockoutUntil`).
+  - **Inactivity Auto-Lock:** Active sessions lock automatically after the configured idle timeout.
+  - **30-Day Session Option:** Users can opt into "keep me signed in" for 30 days on trusted personal devices.
+
+### Limits (Important)
+**Local login is a visual privacy gate on a shared device and is NOT encryption at rest.** All records inside `IndexedDB` (`nutrilog-data-<accountId>`) are stored as unencrypted browser data on your device's disk. Anyone with physical access to an unlocked device, OS user profile, or browser Developer Tools can inspect or delete `IndexedDB` tables without logging in. Do not use "keep me signed in" on public or shared computers, and always protect your device with an operating system passcode and disk encryption (such as BitLocker or FileVault).
+
+---
+
+## 7. Legacy v0.1 Migration
+
+When a user upgrades from `v0.1.0` (which stored single-user data without accounts) to `v0.2.0`:
+1. Upon creating the first local account in `v0.2.0` (or via the migration prompt), `db.js` detects the legacy `v0.1` IndexedDB database/stores.
+2. It copies all legacy profile settings, custom foods, dishes, and daily logs into the new `nutrilog-data-<accountId>` database, assigning UUIDs, `createdAt`/`updatedAt` timestamps, and `deleted: false` flags, and verifies that migrated record counts match.
+3. **Old Database Kept for Safety:** The legacy `v0.1` database is **not** automatically deleted during migration. It remains untouched in the browser until you confirm your migrated data looks right and explicitly choose to remove the legacy data.
+4. **What to Do If Something Looks Wrong:** **Do NOT clear browser site data or uninstall the PWA.** Clearing site data wipes both the new and legacy databases permanently. Instead, export a JSON backup immediately and inspect or re-run the migration from the preserved legacy database.
+
+---
+
+## 8. Run Locally on Windows and Mac
+
+Because NutriLog uses native ES modules without a bundler, you only need a static local HTTP server (opening `index.html` via `file://` will fail due to browser CORS rules on ES modules).
+
+### Using VS Code + Live Server (Windows & macOS)
+1. Install [Visual Studio Code](https://code.visualstudio.com/) and the **Live Server** extension (`ritwickdey.LiveServer`).
+2. Clone the repository and open the folder in VS Code:
+   - **macOS (Terminal):**
+     ```bash
+     git clone [https://github.com/knnahy/macro-tracker.git](https://github.com/knnahy/macro-tracker.git)
+     cd macro-tracker
+     code .
+     ```
+   - **Windows (PowerShell):**
+     ```powershell
+     git clone [https://github.com/knnahy/macro-tracker.git](https://github.com/knnahy/macro-tracker.git)
+     Set-Location macro-tracker
+     code .
+     ```
+3. Right-click `index.html` in VS Code and select **"Open with Live Server"** (or click **Go Live** in the bottom status bar).
+4. Your browser will open `http://127.0.0.1:5500/` (or similar).
+
+> **Note on CSP Console Warning in Live Server:** `index.html` enforces a strict Content Security Policy (CSP) that blocks inline scripts. VS Code Live Server automatically injects a small inline WebSocket reload script into the page, which triggers a CSP error in the browser DevTools console locally. **This is expected in Live Server and does not occur in production on GitHub Pages.**
+
+---
+
+## 9. Tests and Acceptance Checks
+
+Before releasing any change, verify the following acceptance checks manually or via the test runner:
+
+| Check | Input / Scenario | Expected Result |
+|---|---|---|
+| **1. BMR Calculation (Male)** | Sex: Male, Weight: `80 kg`, Height: `180 cm`, Age: `30` | Mifflin-St Jeor BMR = **`1780 kcal`** ($(10 \times 80) + (6.25 \times 180) - (5 \times 30) + 5$) |
+| **2. BMR Calculation (Female)** | Sex: Female, Weight: `60 kg`, Height: `165 cm`, Age: `30` | Mifflin-St Jeor BMR = **`1320.25 kcal`** ($(10 \times 60) + (6.25 \times 165) - (5 \times 30) - 161$) |
+| **3. Food Macro Energy (100 g)** | Protein: `10 g`, Carbs: `20 g`, Fat: `5 g` per 100 g | Calculated energy = **`165 kcal`** per 100 g ($(10 \times 4) + (20 \times 4) + (5 \times 9)$) |
+| **4. Portion Scaling (150 g)** | `150 g` of the food above (`165 kcal` / 100 g) | Portion energy = **`247.5 kcal`** (Protein `15 g`, Carbs `30 g`, Fat `7.5 g`) |
+| **5. Account Isolation** | Create Account A and Account B; log food in Account A; switch to Account B | Account B sees zero logs/foods from Account A; data stays isolated in `nutrilog-data-<accountId>`. |
+| **6. Failed Login Lockout** | Enter wrong password 5 times in a row | Account locks on the 5th failed attempt and rejects login until the lockout timer expires. |
+| **7. Legacy v0.1 Migration Counts** | Trigger migration from a populated v0.1 database | Count of foods, dishes, and logs in `nutrilog-data-<accountId>` equals the v0.1 source counts; v0.1 DB remains intact. |
+| **8. Soft Delete & Snapshots** | Log a food today, then soft-delete that food from the catalog | Food disappears from active catalog picker, stays in DB with `deleted: true`, and today's log snapshot stays intact. |
+| **9. Offline Mode** | Load app once, enable Airplane Mode / DevTools "Offline", reload page | App loads from Service Worker cache and allows logging and viewing data offline. |
+
+---
+
+## 10. Releasing and Version Bumping
+
+### Git Release Workflow
 ```bash
-# 1. Clone the repository
-git clone [https://github.com/](https://github.com/)[PENDING]/nutrilog.git
-cd nutrilog
+# 1. Work on a feature or release branch
+git checkout -b release/v0.2.x
 
-# 2. Install dependencies
-npm install
+# 2. Stage and commit changes
+git add .
+git commit -m "release: v0.2.x description"
 
-# 3. Start local development server
-npm run dev
+# 3. Merge to main, tag, and push to deploy on GitHub Pages
+git checkout main
+git merge --no-ff release/v0.2.x
+git tag -a v0.2.x -m "NutriLog v0.2.x"
+git push origin main --tags
 ```
 
-### Setup on Windows (PowerShell or Command Prompt)
-```powershell
-# 1. Clone the repository
-git clone [https://github.com/](https://github.com/)[PENDING]/nutrilog.git
-Set-Location nutrilog
+### When and How to Bump Version Constants
 
-# 2. Install dependencies
-npm install
+| Constant / Version | Where Defined | When You MUST Bump It |
+|---|---|---|
+| **Service Worker Cache Name** (`CACHE_NAME`) | `service-worker.js` | **Every release** that modifies any HTML, CSS, JS, or vendor file, so returning browsers purge stale cached assets. |
+| **Dexie Schema Version** (`db.version(N)`) | `db.js` | Whenever you add, rename, or change indexed fields or tables in `nutrilog-auth` or `nutrilog-data-<accountId>`. Never edit an existing version block in place; add a new `.version(N+1)` block. |
+| **`APP_VERSION`** | `config.js` | Every release (`MAJOR.MINOR.PATCH`) to match the Git tag and `CHANGELOG.md`. |
+| **`TERMS_VERSION`** | `config.js`, `legal/terms.html`, `consent-texts.md` | Whenever `legal/terms.html` changes in a way that affects user obligations, features, or scope. |
+| **`PRIVACY_VERSION`** | `config.js`, `legal/privacy.html`, `consent-texts.md` | Whenever `legal/privacy.html` changes (e.g., new storage fields, retention rules, or processors). |
 
-# 3. Start local development server
-npm run dev
-```
+---
 
-## 6. Running, Building & Testing
-- `npm run dev` — Starts the local development server with hot reload.
-- `npm run build` — Compiles and bundles static production assets into `dist/`.
-- `npm run preview` — Serves the production `dist/` folder locally to test the Service Worker.
-- `npm test` — Runs unit tests (Mifflin-St Jeor math, calorie floor warnings, schema migrations).
-- `npm run test:e2e` — Runs end-to-end acceptance tests.
+## 11. Backups
 
-### Mandatory Acceptance Tests Before Any Release
-1. **Zero Network Leak Test (MODE A):** Verify in headless browser network inspector that creating a profile, logging food/water, exporting data, and deleting an account trigger **zero** outgoing HTTP/WebSocket requests containing user data.
-2. **Calorie Floor Warning Test:** Verify that setting or calculating a target below `1200 kcal` (female profile) or `1500 kcal` (male profile) renders the mandatory non-dismissible health warning banner (`calorie_floor_warning_v0.1.0`).
-3. **18+ Gate & Unchecked Consent Test:** Verify that sign-up checkboxes are unchecked by default and reject ages under 18.
-4. **Data Export & Deletion Completeness Test:** Verify that exporting outputs all user stores (`profile`, `food_logs`, `water_logs`, `streaks`) and that clicking "Delete Account" wipes all `IndexedDB` object stores completely.
+Because all data in v0.2.0 lives only inside your browser's `IndexedDB`:
+- **Export JSON Weekly:** Use the in-app **Export JSON** button at least once a week.
+- **Store Copies Outside the Device:** Save exported `.json` files to an external drive or personal cloud drive so a lost phone, broken laptop, or accidental browser reset does not wipe your history.
+- **In-App Backup Reminder:** NutriLog tracks when you last exported a backup and displays a periodic in-app reminder prompting you to export your JSON data.
 
-## 7. Database Schemas & Versioning
+---
 
-### 7.1. Local `IndexedDB` Schema (`nutrilog_db`, Schema Version `1`)
-- **`users_local`:** `id` (UUID), `login_name`, `display_name`, `sex`, `age` (must be greater than or equal to 18), `height_cm`, `weight_kg`, `activity_level`, `goal_type`, `target_kcal`, `consent_version`, `consent_timestamp`, `created_at`.
-- **`food_logs`:** `id` (UUID), `user_id`, `date_iso`, `meal_type`, `item_name`, `kcal`, `protein_g`, `carbs_g`, `fat_g`, `is_custom`.
-- **`water_logs`:** `id` (UUID), `user_id`, `date_iso`, `amount_ml`.
-- **`streaks`:** `user_id`, `current_streak_days`, `longest_streak_days`, `last_logged_date`.
+## 12. Legal Documents
 
-<!-- MODE B -->
-### 7.2. Planned Cloud Schema (MODE B — NOT IN FORCE UNTIL CLOUD LAUNCH)
-- Hosted on Supabase Postgres (EU region `[PENDING]`).
-- Mirrors the local stores above with `user_id` referencing `auth.users(id)` and mandatory Postgres **Row Level Security (RLS)** policies (`auth.uid() = user_id`) on every table, plus `updated_at` and `deleted_at` columns for conflict-free sync.
-<!-- MODE B -->
+- **Public Legal Pages (`/legal`) Are Drafts:** The user-facing pages (`legal/terms.html`, `legal/privacy.html`, `legal/health-disclaimer.html`) and UI consent strings (`legal/es/consent-texts.md`, `legal/en/consent-texts.md`) are **drafts pending review by a licensed lawyer** (`DRAFT: not legally reviewed`) and contain visible `[PENDING]` placeholders for operator identity and contact details. Spanish (`lang="es"`) is the reference version.
+- **Internal Compliance Documents Stay Private:** Internal governance documents (Record of Processing Activities, Breach Response Plan, DPIA Screening Checklist, and Legal Maintenance Guide) are maintained privately **outside this public repository** and **must never be committed to Git**.
+- **Triggers That Require Updating Legal Documents Before Shipping Code:**
+  1. **Accounts Online / Cloud Sync:** Moving from local-only (Mode A) to cloud accounts (Mode B / Supabase).
+  2. **Analytics or Crash Reporting:** Adding any telemetry, error tracker, or third-party script.
+  3. **Payments or Subscriptions:** Introducing paid plans or checkout providers.
+  4. **New Processors:** Adding or changing hosting, database, email, or payment providers.
+  5. **New Data Categories:** Collecting new personal or health/biometric fields (e.g., weight log history, medical conditions, barcode scans hitting external APIs).
+  6. **New Target Countries:** Targeting users outside Colombia and Spain/EU.
 
-## 8. Accounts Design (Local Now, Remote Later)
-- **MODE A (v0.1.0 — Current):** Local accounts are keyed by `login_name` inside `IndexedDB`. Switching profiles on the same browser switches the active `user_id` filter. It is an on-screen privacy gate only, **not** cryptographic encryption at rest.
-<!-- MODE B -->
-- **MODE B (v0.2.0 — Planned, Not in Force):** Users may optionally stay in local-only mode OR opt in to a Supabase cloud account (email + password) after checking the separate explicit health-data consent checkbox (`mode_b_cloud_signup_v0.1.0`). Upon opt-in, local `IndexedDB` records can be migrated to the user's cloud account.
-<!-- MODE B -->
+---
 
-## 9. How to Bump Cache and Schema Versions
-1. **Bumping `IndexedDB` Schema Version:**
-   - Increment `DB_VERSION` in `src/storage/db.ts` (e.g., from `1` to `2`).
-   - Add a non-destructive migration block inside `onupgradeneeded(event)` so existing users do not lose their local logs.
-   - Write a migration unit test verifying upgrade from `v(N-1)` to `vN`.
-2. **Bumping Service Worker Cache Version:**
-   - Increment `CACHE_NAME = "nutrilog-cache-v0.1.X"` in `public/service-worker.js`.
-   - Ensure the `activate` event listener deletes old cache keys not matching the current `CACHE_NAME`.
+## 13. Developer Rules
 
-## 10. Deploying to GitHub Pages
-1. Run `npm test` and confirm all acceptance tests pass.
-2. Run `npm run build` to generate the static `dist/` bundle.
-3. Deploy via GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) on push to `main`, or via `npm run deploy`.
-4. Verify HTTPS enforcement is enabled in GitHub Repository Settings -> Pages.
+1. **No `localStorage` for Core Data:** All profile, account, food, dish, and log data must live in `IndexedDB` via Dexie (`nutrilog-auth` and `nutrilog-data-<accountId>`).
+2. **No `eval`:** Never use `eval()`, `new Function()`, or string-based `setTimeout`.
+3. **No Inline Scripts or Handlers:** Keep a strict CSP. Never use `<script>...</script>`, `onclick="..."`, or `style="..."` in HTML files.
+4. **No External Runtime Requests:** Do not load external fonts (e.g., Google Fonts), CDN scripts, icons, or API calls at runtime. Vendor libraries live in `/vendor`.
+5. **Escape All User Text:** Always escape or sanitize user-supplied names (foods, dishes, display names) before inserting into the DOM (prefer `textContent` over `innerHTML`).
+6. **Keep `calc.js` Pure:** `calc.js` must remain 100% pure functions with zero DOM references and zero database/Dexie imports.
+7. **No Analytics or Logging of Personal Data:** Never log user passwords, recovery codes, body metrics, or food logs to `console.log` or any external service. Do not add analytics without prior legal review.
+8. **Relative Paths Only:** Always use relative paths (`./`, `../`) so the app runs cleanly under the GitHub Pages subpath (`/macro-tracker/`).
 
-## 11. Security Rules & Privacy-by-Design Rules for Developers
-Every contributor must follow these rules strictly:
-1. **Data Minimization:** Never add fields to the database schema that are not strictly necessary for calorie/macro tracking.
-2. **Zero Silent Network Calls:** Do **not** embed Google Fonts from external CDNs, Google Analytics, Sentry, Meta Pixels, or third-party CDNs without prior legal review and updating `local-storage-notice.md` and `privacy-policy.md`. Bundle all fonts and icons locally.
-3. **Never Log Personal or Health Data:** Never pass user weight, age, food logs, or email addresses to `console.log` in production builds or to any error-monitoring service.
-4. **Honest Security Messaging:** Never describe Mode A local login as "encrypted" in UI copy, comments, or release notes.
-5. **Check the Legal Trigger List:** Before building any feature involving cloud sync, payments, AI, analytics, or new health formulas, check `docs/internal/legal-maintenance.md` (Section 4).
+---
 
-## 12. Coding Conventions
-- Strict TypeScript (`"strict": true`).
-- Bilingual parity: Any new UI legal string or disclaimer must be added to both `legal/es/` and `legal/en/` simultaneously.
-- Conventional Commits (`feat:`, `fix:`, `docs:`, `security:`).
+## 14. Known Issues and Limitations
 
-## 13. Roadmap
-- **v0.1.0 (Released — MODE A):** Local-only PWA (`IndexedDB` + Service Worker), Mifflin-St Jeor calculator, 1200/1500 kcal safety warnings, in-app JSON/CSV export and account deletion.
-- **v0.2.0 (Planned — MODE B, Not in Force):** Optional Supabase cloud accounts (EU region `[PENDING]`), multi-device sync, transactional emails, and optional paid subscription plans.
+- **OneDrive Folder Locking on Windows:** If your local repository is inside a folder synced by Microsoft OneDrive, OneDrive can lock `.git` or project folders when switching branches (`git checkout`), causing permission errors. Store your local clone outside OneDrive or pause OneDrive sync while switching branches.
+- **No Server Sync Yet:** Data stays strictly on the device/browser where it was entered. Moving between a phone and a laptop currently requires exporting and importing JSON manually.
+- **No Encryption at Rest:** Local `IndexedDB` tables are not encrypted on disk; local login only gates UI access on shared devices.
 
-## 14. Contributing
-1. Fork the repository and create a feature branch.
-2. Ensure all unit and acceptance tests pass (`npm test`).
-3. Confirm your PR does not trigger any item on the Legal Trigger List (`docs/internal/legal-maintenance.md`) without accompanying legal doc updates.
+---
 
-## 15. License
-Distributed under the **[PENDING]** license.
+## 15. Roadmap (Planned — Not Yet in Force)
+
+- **v0.3 — Password System Refinements & UI Styling:** Polish password/recovery UX, session lock transitions, and visual styling.
+- **Legal Review & `[PENDING]` Completion:** Complete formal review with licensed counsel in Colombia and Spain/EU and fill all `[PENDING]` operator fields.
+- **Server Sync with Cloud Accounts (Mode B):** Optional cloud accounts and multi-device sync using **Supabase (Postgres with Row Level Security in an EU region)** implemented behind the existing Auth Provider Interface.
+- **Weight Log:** Dedicated historical body weight tracking and trend visualization.
+- **Micronutrients:** Optional tracking for fiber, sodium, sugars, vitamins, and minerals.
+- **Barcode Lookup:** Optional food lookup by barcode (requires privacy and processor review before enabling external API calls).
+- **Price per Market:** Optional cost tracking per food item and store/market.
+
+---
+
+## 16. Contributing, License and Contact
+
+- **Contributing:** This is a personal project. If submitting changes or bug reports, follow the Developer Rules in Section 13 and verify all acceptance checks in Section 9 before opening a pull request.
+- **License:** `[PENDING]`
+- **Contact:** `[PENDING]`

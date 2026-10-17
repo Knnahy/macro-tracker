@@ -1,29 +1,31 @@
 # Path: CHANGELOG.md
 # Changelog
-- **Version:** 0.1.0
-- **Effective date:** [PENDING]
-- **Last reviewed:** 2026-10-17
-- **Operating mode:** MODE A (v0.1.0 in force); MODE B (v0.2.0 planned, not in force)
-- **Status:** DRAFT: not legally reviewed
 
-All notable changes to NutriLog (application code and legal/privacy documentation) are documented in this file. This project adheres to Semantic Versioning.
+All notable changes to NutriLog are documented in this file. This project follows Semantic Versioning.
 
-<!-- MODE B -->
-## [0.2.0] - Planned (MODE B — NOT IN FORCE UNTIL CLOUD LAUNCH)
-### Planned (Not Yet Implemented or Active)
-- **Cloud Accounts & Multi-Device Sync:** Optional email + password accounts backed by Supabase (Postgres in EU region `[PENDING]`) with Row Level Security (RLS).
-- **Explicit Sensitive Data Consent Flow:** Dedicated, unbundled sign-up checkbox (`mode_b_cloud_signup_v0.1.0`) for explicit health-data consent under GDPR Art. 9.2.a and Colombian Law 1581 of 2012 Art. 6.
-- **Transactional Emails:** Password reset and security alerts via `[PENDING]`.
-- **Paid Subscriptions:** Optional paid plans processed via `[PENDING payment provider]` with statutory 14-day EU withdrawal (`TRLGDCU`) and 5-business-day Colombian *retracto* (`Ley 1480 de 2011`) support.
-<!-- MODE B -->
+## 0.2.0 - 2026-10-17
+
+### Added
+- **Local Accounts & Authentication (`nutrilog-auth`):** Multi-account support on a single browser with PBKDF2 password hashing, per-user cryptographic salts, and an Auth Provider Interface ready for future cloud providers.
+- **Per-Account Isolated Databases (`nutrilog-data-<accountId>`):** Dedicated Dexie `IndexedDB` database per account so multiple local users on the same device have strictly isolated foods, dishes, logs, and settings.
+- **One-Time Recovery Code:** Generates a single-use recovery code (stored only as a PBKDF2 hash) at account creation to allow local password resets without a server.
+- **Session Controls & Brute-Force Lockout:** Added optional 30-day "keep me signed in", automatic session lock after inactivity, and temporary account lockout after 5 consecutive failed login attempts.
+- **Account Management & Backup Tools:** Added in-app password change, full account data JSON export, periodic in-app backup reminders, and permanent account deletion (which drops the account's local database and wipes all soft-deleted records).
+- **Water, Drinks & Streaks Tracking:** Added daily hydration/drinks logging and consecutive day logging streak counters.
+- **Bilingual Legal Pages (Drafts):** Added offline-ready Spanish and English legal pages (`legal/terms.html`, `legal/privacy.html`, `legal/health-disclaimer.html`, `legal/legal.css`) and versioned UI consent strings (`TERMS_VERSION`, `PRIVACY_VERSION`).
+
+### Changed
+- **Modular ES Architecture:** Split application logic into dedicated vanilla ES modules (`calc.js` for pure math, `db.js` for Dexie persistence and migrations, auth provider module, `ui.js`, `app.js`, and `config.js`) with local Dexie in `/vendor`.
+- **Soft Deletes & Log Snapshots:** Standardized all records with UUIDs, `createdAt`, `updatedAt`, and `deleted` flags. Daily log entries now store immutable nutrition snapshots so editing or soft-deleting a food or dish preserves historical daily logs.
+- **Strict Content Security Policy (CSP):** Removed inline scripts and inline styles across the app and legal pages, using relative paths for GitHub Pages compatibility (`/macro-tracker/`).
+
+### Migration
+- **Automatic Legacy `v0.1.0` Data Migration:** On first account setup in `0.2.0`, existing `v0.1.0` single-user foods, dishes, settings, and logs are automatically migrated into the user's new `nutrilog-data-<accountId>` database with UUIDs and audit timestamps.
+- **Non-Destructive Fallback:** The legacy `v0.1.0` database is intentionally kept untouched in the browser until the user verifies their migrated records and explicitly removes it. If anything looks wrong after upgrading, **do not clear browser site data**—export a JSON backup first.
 
 ---
 
-## [0.1.0] - 2026-10-17 (MODE A — Released & In Force)
+## 0.1.0 - Initial Release
+
 ### Added
-- **Local-Only PWA Architecture (MODE A):** All user profiles, body metrics, calorie/macro goals, food/drink logs, water logs, and streaks are stored 100% locally in the user's browser via `IndexedDB`.
-- **Offline Support:** Service Worker for caching static application assets on GitHub Pages.
-- **Mifflin-St Jeor Calculator:** Local calculation of estimated BMR, TDEE, and macronutrient targets.
-- **Calorie-Floor Health Warnings:** Automatic in-app warning banner (`calorie_floor_warning_v0.1.0`) whenever a daily calorie target falls below **1200 kcal (women)** or **1500 kcal (men)**.
-- **In-App Data Rights Controls:** Full data export (`JSON`/`CSV`) and immediate local account/data deletion inside Settings.
-- **Bilingual Legal & Compliance Documentation Suite (`v0.1.0`):** Drafted Spanish (`legal/es/`) and English (`legal/en/`) Terms of Use, Privacy Policy, Health Disclaimer, Local Storage Notice, Data Subject Rights Guide, UI Consent Texts, Retention & Deletion Policy, Refund & Withdrawal Policy, and internal compliance records (`docs/internal/`).
+- Initial single-user local-only PWA prototype for macro and calorie tracking (Mifflin-St Jeor calculator, foods catalog, dishes builder, daily food log, and Service Worker offline caching).
